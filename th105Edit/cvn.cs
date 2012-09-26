@@ -38,7 +38,18 @@ namespace cvn_helper
         public override string ToString()
         {
             if (fields == null) return string.Empty;
-            return string.Join(",", fields);
+            string result = string.Empty;
+            bool first = true;
+            foreach (string i in fields)
+            {
+                if (!first) result += ",";
+                first = false;
+                if (i.IndexOf(',') != -1)
+                    result += "\"" + i + "\"";
+                else
+                    result += i;
+            }
+            return result;
         }
     }
     public class cv1DataCollection : Collection<cv1DataLine>
