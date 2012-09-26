@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Text;
 using System.Media;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 
 namespace cvn_helper
@@ -71,6 +72,7 @@ namespace cvn_helper
         {
             get;
         }
+        public abstract void SetData(object Data);
 
         protected cvnBase()
         {
@@ -78,6 +80,7 @@ namespace cvn_helper
 
         public abstract void Open(string Path);
         public abstract void SaveToFile(string Path);
+        public abstract void Extract(string Path);
 
         public abstract void Dispose();
 
@@ -97,7 +100,7 @@ namespace cvn_helper
             m_buf = null;
         }
         public cv0(string Path)
-            : base()
+            : this()
         {
             Open(Path);
         }
@@ -151,6 +154,10 @@ namespace cvn_helper
             }
             File.WriteAllBytes(Path, m_newbuf);
         }
+        public override void Extract(string Path)
+        {
+            File.WriteAllBytes(Path, m_buf);
+        }
 
         public override object Data
         {
@@ -160,9 +167,9 @@ namespace cvn_helper
                 return m_encoding.GetString(m_buf);
             }
         }
-        public void SetData(string Data)
+        public override void SetData(object Data)
         {
-            m_buf = m_encoding.GetBytes(Data);
+            m_buf = m_encoding.GetBytes(Data as string);
         }
 
         public override void Dispose()
@@ -204,6 +211,12 @@ namespace cvn_helper
             }
         }
         private cv1DataCollection m_records;
+        public override void SetData(object Data)
+        {
+            m_records = Data as cv1DataCollection;
+            ReloadRecords();
+            UpdateRawData();
+        }
 
         public override void Open(string Path)
         {
@@ -218,6 +231,11 @@ namespace cvn_helper
         {
             UpdateRawData();
             base.SaveToFile(Path);
+        }
+        public override void Extract(string Path)
+        {
+            UpdateRawData();
+            base.Extract(Path);
         }
 
         private void ReloadRecords()
@@ -254,7 +272,261 @@ namespace cvn_helper
             return m_records.ToString();
         }
     }
-    
+    public class cv2 : cvnBase
+    {
+        private enum enum_graphic_format
+        {
+            WithPalette,
+            General,
+            Unknown,
+        }
+
+        private enum_graphic_format m_format;
+        private byte m_raw_format;
+        private int m_width_actual, m_height, m_width_data;
+        private int m_unknown_field;
+        private int m_length
+        {
+            get
+            {
+                int result = 0;
+                switch (m_format)
+                {
+                    case enum_graphic_format.WithPalette:
+                        result = m_width_actual * m_height;
+                        break;
+                    case enum_graphic_format.General:
+                        result = m_width_actual * m_height * 4;
+                        break;
+                }
+                return result;
+            }
+        }
+        private int m_width_in_bytes
+        {
+            get
+            {
+                int result = 0;
+                switch (m_format)
+                {
+                    case enum_graphic_format.WithPalette:
+                        result = m_width_data;
+                        break;
+                    case enum_graphic_format.General:
+                        result = m_width_data * 4;
+                        break;
+                }
+                return result;
+            }
+        }
+        private int m_actual_width_in_bytes
+        {
+            get
+            {
+                int result = 0;
+                switch (m_format)
+                {
+                    case enum_graphic_format.WithPalette:
+                        result = m_width_actual;
+                        break;
+                    case enum_graphic_format.General:
+                        result = m_width_actual * 4;
+                        break;
+                }
+                return result;
+            }
+        }
+
+        private Bitmap m_graphic;
+        private bool m_generated_graphic;
+
+        public cv2()
+            : base()
+        {
+            m_type = cvnType.Graphic;
+            m_format = enum_graphic_format.Unknown;
+            m_width_actual = m_height = m_width_data = 0;
+            m_graphic = null;
+        }
+        public cv2(string Path)
+            : this()
+        {
+            Open(Path);
+        }
+
+        public override object Data
+        {
+            get { return m_graphic; }
+        }
+        public override void SetData(object Data)
+        {
+            Bitmap _Data = Data as Bitmap;
+            if (_Data.PixelFormat != PixelFormat.Format32bppArgb && _Data.PixelFormat != PixelFormat.Format8bppIndexed)
+                throw new FormatException("지원하지 않는 포맷의 이미지입니다.");
+            enum_graphic_format NewFormat = enum_graphic_format.Unknown;
+            switch (_Data.PixelFormat)
+            {
+                case PixelFormat.Format8bppIndexed: NewFormat = enum_graphic_format.WithPalette; break;
+                case PixelFormat.Format32bppArgb: NewFormat = enum_graphic_format.General; break;
+            }
+            if (m_format != NewFormat)
+                throw new FormatException("포맷이 일치하지 않습니다.");
+            if (m_width_actual != _Data.Width || m_height != _Data.Height)
+                throw new FormatException("이미지 크기가 일치하지 않습니다.");
+            m_graphic = _Data;
+            m_generated_graphic = false;
+        }
+        
+        public override void Open(string Path)
+        {
+            Open(Path, "");
+        }
+        public void Open(string Path, string PalettePath)
+        {
+            FileStream fp = new FileStream(Path, FileMode.Open);
+            byte[] header = new byte[0x11];
+            fp.Read(header, 0, 0x11);
+            m_raw_format = header[0];
+            switch (m_raw_format)
+            {
+                case 0x08:
+                    m_format = enum_graphic_format.WithPalette;
+                    break;
+                case 0x18:
+                case 0x20:
+                    m_format = enum_graphic_format.General;
+                    break;
+                default:
+                    m_format = enum_graphic_format.Unknown;
+                    break;
+            }
+            byte[] buf = new byte[4];
+            Array.Copy(header, 1, buf, 0, 4);
+            m_width_actual = endian(buf);
+            Array.Copy(header, 5, buf, 0, 4);
+            m_height = endian(buf);
+            Array.Copy(header, 9, buf, 0, 4);
+            m_width_data = endian(buf);
+            Array.Copy(header, 13, buf, 0, 4);
+            m_unknown_field = endian(buf);
+
+            byte[] m_raw = new byte[m_length];
+            fp.Read(m_raw, 0, m_length);
+            m_graphic = new Bitmap(m_width_actual, m_height);
+            m_generated_graphic = true;
+            BitmapData raw_data;
+            switch (m_format)
+            {
+                case enum_graphic_format.General:
+                    raw_data = m_graphic.LockBits(
+                        new Rectangle(0, 0, m_width_actual, m_height),
+                        ImageLockMode.WriteOnly,
+                        PixelFormat.Format32bppArgb);
+                    break;
+                case enum_graphic_format.WithPalette:
+                    raw_data = m_graphic.LockBits(
+                        new Rectangle(0, 0, m_width_actual, m_height),
+                        ImageLockMode.WriteOnly,
+                        PixelFormat.Format8bppIndexed);
+                    break;
+                default:
+                    throw new FormatException("지원되지 않는 포맷의 cv2입니다.");
+            }
+            int bitmap_len = raw_data.Stride * raw_data.Height;
+            byte[] bitmap_buffer = new byte[bitmap_len];
+            System.Runtime.InteropServices.Marshal.Copy(raw_data.Scan0, bitmap_buffer, 0, bitmap_len);
+            for (int i = 0; i < m_height; i++)
+            {
+                int startAt_buf = i * m_width_in_bytes;
+                int startAt_image = i * raw_data.Stride;
+                for (int j = 0; j < m_width_in_bytes; j++)
+                    bitmap_buffer[startAt_image + j] = m_raw[startAt_buf + j];
+            }
+            System.Runtime.InteropServices.Marshal.Copy(bitmap_buffer, 0, raw_data.Scan0, bitmap_len);
+            m_graphic.UnlockBits(raw_data);
+            if (m_format == enum_graphic_format.WithPalette)
+            {
+                if (PalettePath == "")
+                {
+                    m_graphic.Dispose();
+                    throw new ArgumentException("팔레트 파일이 지정되지 않았습니다.", "PalettePath");
+                }
+                m_graphic.Dispose();
+                throw new NotImplementedException("Indexed 형식은 아직 지원하지 않습니다.");
+            }
+        }
+        public override void SaveToFile(string Path)
+        {
+            FileStream fp = new FileStream(Path, FileMode.Create);
+            byte[] header = new byte[0x11];
+            header[0] = m_raw_format;
+            Array.Copy(deendian(m_width_actual), 0, header, 1, 4);
+            Array.Copy(deendian(m_height), 0, header, 5, 4);
+            Array.Copy(deendian(m_width_data), 0, header, 9, 4);
+            Array.Copy(deendian(m_unknown_field), 0, header, 13, 4);
+            fp.Write(header, 0, 0x11);
+
+            BitmapData raw_data;
+            switch (m_format)
+            {
+                case enum_graphic_format.General:
+                    raw_data = m_graphic.LockBits(
+                        new Rectangle(0, 0, m_width_actual, m_height),
+                        ImageLockMode.WriteOnly,
+                        PixelFormat.Format32bppArgb);
+                    break;
+                case enum_graphic_format.WithPalette:
+                    raw_data = m_graphic.LockBits(
+                        new Rectangle(0, 0, m_width_actual, m_height),
+                        ImageLockMode.WriteOnly,
+                        PixelFormat.Format8bppIndexed);
+                    break;
+                default:
+                    throw new FormatException("지원되지 않는 포맷의 cv2입니다.");
+            }
+            int bitmap_len = raw_data.Stride * raw_data.Height;
+            byte[] bitmap_buffer = new byte[bitmap_len];
+            System.Runtime.InteropServices.Marshal.Copy(raw_data.Scan0, bitmap_buffer, 0, bitmap_len);
+            for (int i = 0; i < m_height; i++)
+            {
+                int startAt_image = i * raw_data.Stride;
+                fp.Write(bitmap_buffer, startAt_image, m_actual_width_in_bytes);
+                for (int j = m_actual_width_in_bytes; j < m_width_in_bytes; j++)
+                    fp.WriteByte(0);
+            }
+            m_graphic.UnlockBits(raw_data);
+            fp.Close();
+        }
+        public override void Extract(string Path)
+        {
+            m_graphic.Save(Path);
+        }
+
+        public override void Dispose()
+        {
+            if (m_generated_graphic) m_graphic.Dispose();
+        }
+
+        public override string ToString()
+        {
+            return "cvn_helper.cv2";
+        }
+
+        private static int endian(byte[] bytes)
+        {
+            return bytes[0] + (bytes[1] << 8) + (bytes[2] << 16) + (bytes[3] << 24);
+        }
+        private static byte[] deendian(int target)
+        {
+            byte[] result = new byte[4];
+            result[0] = (byte)(target >> 0  & 0xFF);
+            result[1] = (byte)(target >> 8  & 0xFF);
+            result[2] = (byte)(target >> 16 & 0xFF);
+            result[3] = (byte)(target >> 24 & 0xFF);
+            return result;
+        }
+    }
+
     class cvn
     {
         public static cvnBase Open(string Path, cvnType FileType = cvnType.Auto)
@@ -276,6 +548,17 @@ namespace cvn_helper
             {
                 case cvnType.Text: return new cv0(Path);
                 case cvnType.CSV: return new cv1(Path);
+                case cvnType.Graphic:
+                    cv2 result = new cv2();
+                    try
+                    {
+                        result.Open(Path);
+                    }
+                    catch (System.ArgumentException)
+                    {
+                        result.Open(Path, "palette000.pal");
+                    }
+                    return result;
                 default: return null;
             }
         }

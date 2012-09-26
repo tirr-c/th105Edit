@@ -34,6 +34,9 @@
             this.MenuSave = new System.Windows.Forms.ToolStripMenuItem();
             this.MenuSaveAs = new System.Windows.Forms.ToolStripMenuItem();
             this.MenuSeperate1 = new System.Windows.Forms.ToolStripSeparator();
+            this.MenuImport = new System.Windows.Forms.ToolStripMenuItem();
+            this.MenuExtract = new System.Windows.Forms.ToolStripMenuItem();
+            this.MenuSeparate2 = new System.Windows.Forms.ToolStripSeparator();
             this.MenuExit = new System.Windows.Forms.ToolStripMenuItem();
             this.MenuEncodings = new System.Windows.Forms.ToolStripMenuItem();
             this.MenuJapanese = new System.Windows.Forms.ToolStripMenuItem();
@@ -42,6 +45,7 @@
             this.dlgOpen = new System.Windows.Forms.OpenFileDialog();
             this.cv1List = new System.Windows.Forms.ListView();
             this.cv2Image = new System.Windows.Forms.PictureBox();
+            this.dlgSave = new System.Windows.Forms.SaveFileDialog();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.cv2Image)).BeginInit();
             this.SuspendLayout();
@@ -64,6 +68,9 @@
             this.MenuSave,
             this.MenuSaveAs,
             this.MenuSeperate1,
+            this.MenuImport,
+            this.MenuExtract,
+            this.MenuSeparate2,
             this.MenuExit});
             this.MenuFile.Name = "MenuFile";
             this.MenuFile.Size = new System.Drawing.Size(57, 20);
@@ -90,11 +97,32 @@
             this.MenuSaveAs.Name = "MenuSaveAs";
             this.MenuSaveAs.Size = new System.Drawing.Size(203, 22);
             this.MenuSaveAs.Text = "다른 이름으로 저장...(&A)";
+            this.MenuSaveAs.Click += new System.EventHandler(this.MenuSaveAs_Click);
             // 
             // MenuSeperate1
             // 
             this.MenuSeperate1.Name = "MenuSeperate1";
             this.MenuSeperate1.Size = new System.Drawing.Size(200, 6);
+            // 
+            // MenuImport
+            // 
+            this.MenuImport.Enabled = false;
+            this.MenuImport.Name = "MenuImport";
+            this.MenuImport.Size = new System.Drawing.Size(203, 22);
+            this.MenuImport.Text = "파일에서 불러 오기...";
+            // 
+            // MenuExtract
+            // 
+            this.MenuExtract.Enabled = false;
+            this.MenuExtract.Name = "MenuExtract";
+            this.MenuExtract.Size = new System.Drawing.Size(203, 22);
+            this.MenuExtract.Text = "추출...(&E)";
+            this.MenuExtract.Click += new System.EventHandler(this.MenuExtract_Click);
+            // 
+            // MenuSeparate2
+            // 
+            this.MenuSeparate2.Name = "MenuSeparate2";
+            this.MenuSeparate2.Size = new System.Drawing.Size(200, 6);
             // 
             // MenuExit
             // 
@@ -142,10 +170,6 @@
             this.cv0Data.Size = new System.Drawing.Size(61, 54);
             this.cv0Data.TabIndex = 1;
             this.cv0Data.Visible = false;
-            // 
-            // dlgOpen
-            // 
-            this.dlgOpen.FileOk += new System.ComponentModel.CancelEventHandler(this.dlgOpen_FileOk);
             // 
             // cv1List
             // 
@@ -208,6 +232,10 @@
         private System.Windows.Forms.OpenFileDialog dlgOpen;
         private System.Windows.Forms.ListView cv1List;
         private System.Windows.Forms.PictureBox cv2Image;
+        private System.Windows.Forms.ToolStripMenuItem MenuImport;
+        private System.Windows.Forms.ToolStripMenuItem MenuExtract;
+        private System.Windows.Forms.ToolStripSeparator MenuSeparate2;
+        private System.Windows.Forms.SaveFileDialog dlgSave;
     }
 }
 

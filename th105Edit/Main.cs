@@ -12,6 +12,7 @@ namespace cvn_helper
     {
         cvnBase m_workingfile;
         string m_workingpath;
+
         public frmMain()
         {
             m_workingfile = null;
@@ -25,10 +26,11 @@ namespace cvn_helper
             dlgOpen.Filter = "지원되는 모든 파일(*.cv0, *.cv1, *.cv2, *.cv3)|*.cv0;*.cv1;*.cv2;*.cv3|" +
                 "암호화된 평문 텍스트(*.cv0)|*.cv0|암호화된 CVS(*.cv1)|*.cv1|그래픽(*.cv2)|*.cv2|사운드(*.cv3)|*.cv3";
             dlgOpen.FilterIndex = 0;
+            dlgOpen.FileOk += new CancelEventHandler(dlgOpenCVN_FileOk);
             dlgOpen.ShowDialog();
         }
 
-        private void dlgOpen_FileOk(object sender, CancelEventArgs e)
+        private void dlgOpenCVN_FileOk(object sender, CancelEventArgs e)
         {
             m_workingpath = dlgOpen.FileName;
             m_workingfile = cvn.Open(m_workingpath);
@@ -45,7 +47,14 @@ namespace cvn_helper
                 MenuEncodings.Enabled = false;
             }
             MenuSave.Enabled = true;
+            MenuSaveAs.Enabled = true;
+            MenuExtract.Enabled = true;
 
+            RefreshView();
+        }
+
+        private void RefreshView()
+        {
             ChangeEnabled(m_workingfile.Type);
             switch (m_workingfile.Type)
             {
@@ -54,6 +63,9 @@ namespace cvn_helper
                     break;
                 case cvnType.CSV:
                     cv1UpdateList();
+                    break;
+                case cvnType.Graphic:
+                    cv2Image.Image = m_workingfile.Data as Bitmap;
                     break;
             }
         }
@@ -119,13 +131,79 @@ namespace cvn_helper
 
         private void MenuSave_Click(object sender, EventArgs e)
         {
-            (m_workingfile as cv0).SetData(cv0Data.Text);
+            switch (m_workingfile.Type)
+            {
+                case cvnType.Text:
+                    m_workingfile.SetData(cv0Data.Text);
+                    break;
+                case cvnType.CSV:
+                case cvnType.Graphic:
+                    break;
+            }
             m_workingfile.SaveToFile(m_workingpath);
         }
 
         private void MenuExit_Click(object sender, EventArgs e)
         {
             Application.Exit();
+        }
+
+        private void MenuExtract_Click(object sender, EventArgs e)
+        {
+            dlgSave.Reset();
+            switch (m_workingfile.Type)
+            {
+                case cvnType.Text:
+                    dlgSave.Filter = "텍스트 파일(*.txt)|*.txt";
+                    break;
+                case cvnType.CSV:
+                    dlgSave.Filter = "CSV 시트(*.csv)|*.csv";
+                    break;
+                case cvnType.Graphic:
+                    dlgSave.Filter = "PNG(*.png)|*.png";
+                    break;
+            }
+            dlgSave.Filter += "|모든 파일(*.*)|*.*";
+            dlgSave.FilterIndex = 1;
+            dlgSave.OverwritePrompt = true;
+            if (dlgSave.ShowDialog() == DialogResult.OK)
+            {
+                m_workingfile.Extract(dlgSave.FileName);
+            }
+        }
+
+        private void MenuSaveAs_Click(object sender, EventArgs e)
+        {
+            dlgSave.Reset();
+            switch (m_workingfile.Type)
+            {
+                case cvnType.Text:
+                    dlgSave.Filter = "cv0(*.cv0)|*.cv0";
+                    break;
+                case cvnType.CSV:
+                    dlgSave.Filter = "cv1(*.cv1)|*.cv1";
+                    break;
+                case cvnType.Graphic:
+                    dlgSave.Filter = "cv2(*.cv2)|*.cv2";
+                    break;
+            }
+            dlgSave.Filter += "|모든 파일(*.*)|*.*";
+            dlgSave.FilterIndex = 0;
+            dlgSave.OverwritePrompt = true;
+            if (dlgSave.ShowDialog() == DialogResult.OK)
+            {
+                switch (m_workingfile.Type)
+                {
+                    case cvnType.Text:
+                        m_workingfile.SetData(cv0Data.Text);
+                        break;
+                    case cvnType.CSV:
+                    case cvnType.Graphic:
+                        break;
+                }
+                m_workingpath = (sender as SaveFileDialog).FileName;
+                m_workingfile.SaveToFile(m_workingpath);
+            }
         }
     }
 }
