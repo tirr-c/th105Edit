@@ -50,6 +50,7 @@
       <DependentUpon>cv1RecordEditor.cs</DependentUpon>
     </Compile>
     <Compile Include="cvn.cs" />
+    <Compile Include="HinanawiTenshi.cs" />
     <Compile Include="Main.cs">
       <SubType>Form</SubType>
     </Compile>
