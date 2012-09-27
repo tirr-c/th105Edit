@@ -373,10 +373,10 @@ namespace cvn_helper
                 switch (m_format)
                 {
                     case enum_graphic_format.WithPalette:
-                        result = m_width_actual * m_height;
+                        result = m_width_data * m_height;
                         break;
                     case enum_graphic_format.General:
-                        result = m_width_actual * m_height * 4;
+                        result = m_width_data * m_height * 4;
                         break;
                 }
                 return result;
@@ -535,7 +535,7 @@ namespace cvn_helper
             {
                 int startAt_buf = i * m_width_in_bytes;
                 int startAt_image = i * raw_data.Stride;
-                for (int j = 0; j < m_width_in_bytes; j++)
+                for (int j = 0; j < m_actual_width_in_bytes; j++)
                     bitmap_buffer[startAt_image + j] = m_raw[startAt_buf + j];
             }
             System.Runtime.InteropServices.Marshal.Copy(bitmap_buffer, 0, raw_data.Scan0, bitmap_len);
