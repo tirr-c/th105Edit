@@ -90,7 +90,9 @@ namespace cvn_helper
         }
 
         public abstract void Open(string Path);
+        public abstract void Open(Stream fp);
         public abstract void SaveToFile(string Path);
+        public abstract Stream ToStream();
         public abstract void Extract(string Path);
 
         public abstract void Dispose();
@@ -131,6 +133,14 @@ namespace cvn_helper
         public virtual void Open(string Path, Encoding StringEncoding)
         {
             FileStream fp = new FileStream(Path, FileMode.Open);
+            Open(fp, StringEncoding);
+        }
+        public override void Open(Stream fp)
+        {
+            Open(fp, Encoding.GetEncoding("Shift-JIS"));
+        }
+        public virtual void Open(Stream fp, Encoding StringEncoding)
+        {
             long len = fp.Length;
             m_buf = new byte[len];
             fp.Read(m_buf, 0, (int)len);
@@ -148,6 +158,7 @@ namespace cvn_helper
             }
             m_encoding = StringEncoding;
         }
+
         public override void SaveToFile(string Path)
         {
             int len = m_buf.Length;
@@ -164,6 +175,23 @@ namespace cvn_helper
                 delta -= d_delta;
             }
             File.WriteAllBytes(Path, m_newbuf);
+        }
+        public override Stream ToStream()
+        {
+            int len = m_buf.Length;
+            byte[] m_newbuf = new byte[m_buf.Length];
+            m_buf.CopyTo(m_newbuf, 0);
+            byte key, delta;
+            const byte d_delta = 0x6b;
+            key = 0x8b;
+            delta = 0x71;
+            for (int i = 0; i < len; i++)
+            {
+                m_newbuf[i] ^= key;
+                key += delta;
+                delta -= d_delta;
+            }
+            return new MemoryStream(m_newbuf);
         }
         public override void Extract(string Path)
         {
@@ -238,10 +266,25 @@ namespace cvn_helper
             base.Open(Path, StringEncoding);
             ReloadRecords();
         }
+        public override void Open(Stream fp)
+        {
+            Open(fp, Encoding.GetEncoding("Shift-JIS"));
+        }
+        public override void Open(Stream fp, Encoding StringEncoding)
+        {
+            base.Open(fp, StringEncoding);
+            ReloadRecords();
+        }
+
         public override void SaveToFile(string Path)
         {
             UpdateRawData();
             base.SaveToFile(Path);
+        }
+        public override Stream ToStream()
+        {
+            UpdateRawData();
+            return base.ToStream();
         }
         public override void Extract(string Path)
         {
@@ -395,6 +438,16 @@ namespace cvn_helper
         public void Open(string Path, string PalettePath)
         {
             FileStream fp = new FileStream(Path, FileMode.Open);
+            FileStream pp = null;
+            if (PalettePath != "") pp = new FileStream(PalettePath, FileMode.Open);
+            Open(fp, pp);
+        }
+        public override void Open(Stream fp)
+        {
+            Open(fp, null);
+        }
+        public void Open(Stream fp, Stream PalettePath)
+        {
             byte[] header = new byte[0x11];
             fp.Read(header, 0, 0x11);
             m_raw_format = header[0];
@@ -457,7 +510,7 @@ namespace cvn_helper
             m_graphic.UnlockBits(raw_data);
             if (m_format == enum_graphic_format.WithPalette)
             {
-                if (PalettePath == "")
+                if (PalettePath == null)
                 {
                     m_graphic.Dispose();
                     throw new ArgumentException("팔레트 파일이 지정되지 않았습니다.", "PalettePath");
@@ -466,6 +519,7 @@ namespace cvn_helper
                 throw new NotImplementedException("Indexed 형식은 아직 지원하지 않습니다.");
             }
         }
+        
         public override void SaveToFile(string Path)
         {
             FileStream fp = new FileStream(Path, FileMode.Create);
@@ -507,6 +561,48 @@ namespace cvn_helper
             }
             m_graphic.UnlockBits(raw_data);
             fp.Close();
+        }
+        public override Stream ToStream()
+        {
+            MemoryStream fp = new MemoryStream();
+            byte[] header = new byte[0x11];
+            header[0] = m_raw_format;
+            Array.Copy(deendian(m_width_actual), 0, header, 1, 4);
+            Array.Copy(deendian(m_height), 0, header, 5, 4);
+            Array.Copy(deendian(m_width_data), 0, header, 9, 4);
+            Array.Copy(deendian(m_unknown_field), 0, header, 13, 4);
+            fp.Write(header, 0, 0x11);
+
+            BitmapData raw_data;
+            switch (m_format)
+            {
+                case enum_graphic_format.General:
+                    raw_data = m_graphic.LockBits(
+                        new Rectangle(0, 0, m_width_actual, m_height),
+                        ImageLockMode.WriteOnly,
+                        PixelFormat.Format32bppArgb);
+                    break;
+                case enum_graphic_format.WithPalette:
+                    raw_data = m_graphic.LockBits(
+                        new Rectangle(0, 0, m_width_actual, m_height),
+                        ImageLockMode.WriteOnly,
+                        PixelFormat.Format8bppIndexed);
+                    break;
+                default:
+                    throw new FormatException("지원되지 않는 포맷의 cv2입니다.");
+            }
+            int bitmap_len = raw_data.Stride * raw_data.Height;
+            byte[] bitmap_buffer = new byte[bitmap_len];
+            System.Runtime.InteropServices.Marshal.Copy(raw_data.Scan0, bitmap_buffer, 0, bitmap_len);
+            for (int i = 0; i < m_height; i++)
+            {
+                int startAt_image = i * raw_data.Stride;
+                fp.Write(bitmap_buffer, startAt_image, m_actual_width_in_bytes);
+                for (int j = m_actual_width_in_bytes; j < m_width_in_bytes; j++)
+                    fp.WriteByte(0);
+            }
+            m_graphic.UnlockBits(raw_data);
+            return new MemoryStream(fp.GetBuffer());
         }
         public override void Extract(string Path)
         {

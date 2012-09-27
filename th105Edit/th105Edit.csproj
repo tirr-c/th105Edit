@@ -43,6 +43,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArchiveManager.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ArchiveManager.Designer.cs">
+      <DependentUpon>ArchiveManager.cs</DependentUpon>
+    </Compile>
     <Compile Include="cv1RecordEditor.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -51,19 +57,22 @@
     </Compile>
     <Compile Include="cvn.cs" />
     <Compile Include="HinanawiTenshi.cs" />
-    <Compile Include="Main.cs">
+    <Compile Include="CvnEditor.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Main.Designer.cs">
-      <DependentUpon>Main.cs</DependentUpon>
+    <Compile Include="CvnEditor.Designer.cs">
+      <DependentUpon>CvnEditor.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="ArchiveManager.resx">
+      <DependentUpon>ArchiveManager.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="cv1RecordEditor.resx">
       <DependentUpon>cv1RecordEditor.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Main.resx">
-      <DependentUpon>Main.cs</DependentUpon>
+    <EmbeddedResource Include="CvnEditor.resx">
+      <DependentUpon>CvnEditor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

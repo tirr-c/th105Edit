@@ -8,12 +8,12 @@ using System.Windows.Forms;
 
 namespace cvn_helper
 {
-    public partial class frmMain : Form
+    public partial class frmCvnEditor : Form
     {
         cvnBase m_workingfile;
         string m_workingpath;
 
-        public frmMain()
+        public frmCvnEditor()
         {
             m_workingfile = null;
             m_workingpath = string.Empty;
@@ -145,7 +145,7 @@ namespace cvn_helper
 
         private void MenuExit_Click(object sender, EventArgs e)
         {
-            Application.Exit();
+            Close();
         }
 
         private void MenuExtract_Click(object sender, EventArgs e)

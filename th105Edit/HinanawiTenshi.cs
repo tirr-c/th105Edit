@@ -13,6 +13,15 @@ namespace cvn_helper
         private long m_offset, m_length;
         private long m_position;
 
+        public string Entry
+        {
+            get { return m_entry; }
+        }
+        public string[] EntryPath
+        {
+            get { return m_entry.Split('/', '\\'); }
+        }
+
         public TenshiEntry(Stream MainStream, string EntryName, long Offset, long Length)
         {
             m_mainstream = MainStream;
@@ -61,22 +70,46 @@ namespace cvn_helper
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            throw new NotImplementedException();
+            m_mainstream.Seek(m_offset+m_position, SeekOrigin.Begin);
+            int actual_read = (int)(m_length - m_position);
+            if (actual_read > count) actual_read = count;
+
+            m_mainstream.Read(buffer, offset, actual_read);
+            return actual_read;
         }
 
         public override long Seek(long offset, SeekOrigin origin)
         {
-            throw new NotImplementedException();
+            switch (origin)
+            {
+                case SeekOrigin.Begin:
+                    m_position = offset;
+                    break;
+                case SeekOrigin.Current:
+                    m_position += offset;
+                    break;
+                case SeekOrigin.End:
+                    m_position = m_length + offset;
+                    break;
+            }
+            if (m_position < 0) m_position = 0;
+            if (m_position > m_length) m_position = m_length;
+            return m_position;
         }
 
         public override void SetLength(long value)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
+        }
+
+        public override string ToString()
+        {
+            return m_entry;
         }
     }
     class TenshiEntryCollection : Collection<TenshiEntry>
@@ -95,6 +128,10 @@ namespace cvn_helper
             get { return m_entries; }
         }
 
+        private const byte key_base = 0xc5;
+        private const byte key_delta = 0x83;
+        private const byte key_ddelta = 0x53;
+
         public HinanawiTenshi()
         {
             m_list_count = 0;
@@ -112,6 +149,7 @@ namespace cvn_helper
         public void Open(string Path)
         {
             m_stream = new FileStream(Path, FileMode.Open);
+            m_entries.Clear();
             byte[] buf = new byte[4];
             m_stream.Read(buf, 0, 2);
             m_list_count = (short)(buf[0] + (buf[1] << 8));
@@ -121,24 +159,31 @@ namespace cvn_helper
             TenshiRandomGenerator mt = new TenshiRandomGenerator(m_list_length + 6);
             byte[] list_buf = new byte[m_list_length];
             m_stream.Read(list_buf, 0, (int)m_list_length);
+            byte key = key_base, delta = key_delta;
             for (uint i = 0; i < m_list_length; i++)
             {
-                list_buf[i] ^= (byte)(mt.NextInt() ^ 0xff);
+                list_buf[i] ^= (byte)(mt.NextInt() & 0xff);
+                list_buf[i] ^= key;
+                key += delta;
+                delta += key_ddelta;
             }
 
             uint c = 0;
+            Encoding ShiftJIS = Encoding.GetEncoding("Shift-JIS");
             for (short i = 0; i < m_list_count; i++)
             {
                 uint off, len;
-                off = (uint)(buf[c] + (buf[c + 1] << 8) + (buf[c + 2] << 16) + (buf[c + 3] << 24));
+                off = (uint)(list_buf[c] + (list_buf[c + 1] << 8) + (list_buf[c + 2] << 16) + (list_buf[c + 3] << 24));
                 c += 4;
-                len = (uint)(buf[c] + (buf[c + 1] << 8) + (buf[c + 2] << 16) + (buf[c + 3] << 24));
+                len = (uint)(list_buf[c] + (list_buf[c + 1] << 8) + (list_buf[c + 2] << 16) + (list_buf[c + 3] << 24));
                 c += 4;
-                byte entry_len = buf[c];
+                byte entry_len = list_buf[c];
                 c++;
                 byte[] entry_buf = new byte[entry_len];
-                Array.Copy(buf, c, entry_buf, 0, entry_len);
-                m_entries.Add(new TenshiEntry(m_stream, Encoding.ASCII.GetString(entry_buf), (long)off, (long)len));
+                Array.Copy(list_buf, c, entry_buf, 0, entry_len);
+                c += entry_len;
+                string entry_name = ShiftJIS.GetString(entry_buf);
+                m_entries.Add(new TenshiEntry(m_stream, entry_name, (long)off, (long)len));
             }
         }
 
@@ -178,7 +223,7 @@ namespace cvn_helper
             for (mti = 1; mti < N; ++mti)
             {
                 mt[mti] =
-                    (uint)((1812433253 * (mt[mti - 1] ^ (mt[mti - 1] >> 30)) + mti) & 0xFFFFFFFF);
+                    (uint)((((1812433253 * (mt[mti - 1] ^ ((mt[mti - 1] >> 30) & 0xFFFFFFFF))) & 0xFFFFFFFF) + mti) & 0xFFFFFFFF);
             }
         }
 

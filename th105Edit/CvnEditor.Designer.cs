@@ -1,6 +1,6 @@
 ﻿namespace cvn_helper
 {
-    partial class frmMain
+    partial class frmCvnEditor
     {
         /// <summary>
         /// 필수 디자이너 변수입니다.
@@ -195,7 +195,7 @@
             this.cv2Image.TabStop = false;
             this.cv2Image.Visible = false;
             // 
-            // frmMain
+            // frmCvnEditor
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -206,7 +206,7 @@
             this.Controls.Add(this.cv0Data);
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
-            this.Name = "frmMain";
+            this.Name = "frmCvnEditor";
             this.Text = "cvn 편집기";
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
