@@ -5,52 +5,57 @@ using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
+using System.IO;
 
 namespace cvn_helper
 {
     public partial class frmCvnEditor : Form
     {
-        cvnBase m_workingfile;
-        string m_workingpath;
+        private TenshiEntry m_entry;
+        private cvnBase m_workingfile;
+        private string m_workingpath;
+        private bool m_discard_changes;
+        private bool m_is_from_stream;
+        private bool m_changed;
+
+        private static Encoding EUCKR = Encoding.GetEncoding(949);
+        private static Encoding ShiftJIS = Encoding.GetEncoding("Shift-JIS");
+
+        public bool Discard
+        {
+            get { return m_discard_changes; }
+        }
+        public bool Changed
+        {
+            get { return m_changed; }
+        }
+        public cvnBase Data
+        {
+            get { return m_workingfile; }
+        }
+        public TenshiEntry Entry
+        {
+            get { return m_entry; }
+        }
 
         public frmCvnEditor()
         {
             m_workingfile = null;
             m_workingpath = string.Empty;
+            m_discard_changes = true;
+            m_is_from_stream = false;
+            m_changed = false;
             InitializeComponent();
         }
-
-        private void MenuOpen_Click(object sender, EventArgs e)
+        public frmCvnEditor(TenshiEntry BaseFile)
+            : this()
         {
-            dlgOpen.Reset();
-            dlgOpen.Filter = "지원되는 모든 파일(*.cv0, *.cv1, *.cv2, *.cv3)|*.cv0;*.cv1;*.cv2;*.cv3|" +
-                "암호화된 평문 텍스트(*.cv0)|*.cv0|암호화된 CVS(*.cv1)|*.cv1|그래픽(*.cv2)|*.cv2|사운드(*.cv3)|*.cv3";
-            dlgOpen.FilterIndex = 0;
-            dlgOpen.FileOk += new CancelEventHandler(dlgOpenCVN_FileOk);
-            dlgOpen.ShowDialog();
-        }
-
-        private void dlgOpenCVN_FileOk(object sender, CancelEventArgs e)
-        {
-            m_workingpath = dlgOpen.FileName;
-            m_workingfile = cvn.Open(m_workingpath);
-            if (m_workingfile.Type == cvnType.Text || m_workingfile.Type == cvnType.CSV)
-            {
-                MenuEncodings.Visible = true;
-                MenuEncodings.Enabled = true;
-                (m_workingfile as cv0).StringEncoding = Encoding.GetEncoding(949);
-                MenuKorean.Checked = true;
-            }
-            else
-            {
-                MenuEncodings.Visible = false;
-                MenuEncodings.Enabled = false;
-            }
-            MenuSave.Enabled = true;
-            MenuSaveAs.Enabled = true;
-            MenuExtract.Enabled = true;
-
+            m_entry = BaseFile;
+            m_workingpath = m_entry.Entry;
+            m_workingfile = cvn.Open(BaseFile, BaseFile.Type);
+            m_is_from_stream = true;
             RefreshView();
+            m_changed = false;
         }
 
         private void RefreshView()
@@ -78,9 +83,11 @@ namespace cvn_helper
             {
                 case cvnType.Text:
                     pass_index = 0;
+                    MenuEncodings.Visible = MenuEncodings.Enabled = MenuChangeEncoding.Enabled = true;
                     break;
                 case cvnType.CSV:
                     pass_index = 1;
+                    MenuEncodings.Visible = MenuEncodings.Enabled = MenuChangeEncoding.Enabled = true;
                     break;
                 case cvnType.Graphic:
                     pass_index = 2;
@@ -101,12 +108,26 @@ namespace cvn_helper
         
         private void MenuJapanese_CheckedChanged(object sender, EventArgs e)
         {
-            MenuKorean.Checked = !(sender as ToolStripMenuItem).Checked;
+            bool val = (sender as ToolStripMenuItem).Checked;
+            MenuKorean.Checked = !val;
+            if (val)
+            {
+                (m_workingfile as cv0).StringEncoding = ShiftJIS;
+                RefreshView();
+            }
+            m_changed = true;
         }
 
         private void MenuKorean_CheckedChanged(object sender, EventArgs e)
         {
-            MenuJapanese.Checked = !(sender as ToolStripMenuItem).Checked;
+            bool val = (sender as ToolStripMenuItem).Checked;
+            MenuJapanese.Checked = !val;
+            if (val)
+            {
+                (m_workingfile as cv0).StringEncoding = EUCKR;
+                RefreshView();
+            }
+            m_changed = true;
         }
 
         private void cv1List_DoubleClick(object sender, EventArgs e)
@@ -127,9 +148,10 @@ namespace cvn_helper
                 cv1List.Columns.Add((i + 1) + "번 필드");
             foreach (cv1DataLine i in coll)
                 cv1List.Items.Add(new ListViewItem(i.Fields));
+            m_changed = true;
         }
 
-        private void MenuSave_Click(object sender, EventArgs e)
+        private void Save()
         {
             switch (m_workingfile.Type)
             {
@@ -140,11 +162,29 @@ namespace cvn_helper
                 case cvnType.Graphic:
                     break;
             }
-            m_workingfile.SaveToFile(m_workingpath);
+            if (!m_is_from_stream) m_workingfile.SaveToFile(m_workingpath);
         }
-
+        private void Save(Encoding StringEncoding)
+        {
+            switch (m_workingfile.Type)
+            {
+                case cvnType.Text:
+                    (m_workingfile as cv0).SetData(cv0Data.Text, StringEncoding);
+                    break;
+                case cvnType.CSV:
+                    (m_workingfile as cv1).ConvertEncoding(StringEncoding);
+                    break;
+                case cvnType.Graphic:
+                    return;
+            }
+            if (!m_is_from_stream) m_workingfile.SaveToFile(m_workingpath);
+            RefreshView();
+            m_changed = true;
+        }
+        
         private void MenuExit_Click(object sender, EventArgs e)
         {
+            m_discard_changes = false;
             Close();
         }
 
@@ -172,38 +212,37 @@ namespace cvn_helper
             }
         }
 
-        private void MenuSaveAs_Click(object sender, EventArgs e)
+        private void frmCvnEditor_FormClosing(object sender, FormClosingEventArgs e)
         {
-            dlgSave.Reset();
-            switch (m_workingfile.Type)
+            if (m_changed && m_discard_changes)
             {
-                case cvnType.Text:
-                    dlgSave.Filter = "cv0(*.cv0)|*.cv0";
-                    break;
-                case cvnType.CSV:
-                    dlgSave.Filter = "cv1(*.cv1)|*.cv1";
-                    break;
-                case cvnType.Graphic:
-                    dlgSave.Filter = "cv2(*.cv2)|*.cv2";
-                    break;
-            }
-            dlgSave.Filter += "|모든 파일(*.*)|*.*";
-            dlgSave.FilterIndex = 0;
-            dlgSave.OverwritePrompt = true;
-            if (dlgSave.ShowDialog() == DialogResult.OK)
-            {
-                switch (m_workingfile.Type)
+                switch(MessageBox.Show(m_workingpath + "을(를) 저장하시겠습니까?", "수정 마치기", MessageBoxButtons.YesNoCancel))
                 {
-                    case cvnType.Text:
-                        m_workingfile.SetData(cv0Data.Text);
-                        break;
-                    case cvnType.CSV:
-                    case cvnType.Graphic:
+                    case DialogResult.Cancel:
+                        e.Cancel = true;
+                        return;
+                    case DialogResult.Yes:
+                        m_discard_changes = false;
                         break;
                 }
-                m_workingpath = (sender as SaveFileDialog).FileName;
-                m_workingfile.SaveToFile(m_workingpath);
             }
+            if (!m_discard_changes)
+                Save();
+        }
+
+        private void MenuSaveAsKorean_Click(object sender, EventArgs e)
+        {
+            Save(EUCKR);
+        }
+
+        private void MenuSaveAsJapanese_Click(object sender, EventArgs e)
+        {
+            Save(ShiftJIS);
+        }
+
+        private void cv0Data_TextChanged(object sender, EventArgs e)
+        {
+            m_changed = true;
         }
     }
 }

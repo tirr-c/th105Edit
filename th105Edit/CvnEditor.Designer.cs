@@ -30,10 +30,6 @@
         {
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.MenuFile = new System.Windows.Forms.ToolStripMenuItem();
-            this.MenuOpen = new System.Windows.Forms.ToolStripMenuItem();
-            this.MenuSave = new System.Windows.Forms.ToolStripMenuItem();
-            this.MenuSaveAs = new System.Windows.Forms.ToolStripMenuItem();
-            this.MenuSeperate1 = new System.Windows.Forms.ToolStripSeparator();
             this.MenuImport = new System.Windows.Forms.ToolStripMenuItem();
             this.MenuExtract = new System.Windows.Forms.ToolStripMenuItem();
             this.MenuSeparate2 = new System.Windows.Forms.ToolStripSeparator();
@@ -46,6 +42,9 @@
             this.cv1List = new System.Windows.Forms.ListView();
             this.cv2Image = new System.Windows.Forms.PictureBox();
             this.dlgSave = new System.Windows.Forms.SaveFileDialog();
+            this.MenuChangeEncoding = new System.Windows.Forms.ToolStripMenuItem();
+            this.MenuSaveAsKorean = new System.Windows.Forms.ToolStripMenuItem();
+            this.MenuSaveAsJapanese = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.cv2Image)).BeginInit();
             this.SuspendLayout();
@@ -64,10 +63,6 @@
             // MenuFile
             // 
             this.MenuFile.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.MenuOpen,
-            this.MenuSave,
-            this.MenuSaveAs,
-            this.MenuSeperate1,
             this.MenuImport,
             this.MenuExtract,
             this.MenuSeparate2,
@@ -76,66 +71,39 @@
             this.MenuFile.Size = new System.Drawing.Size(57, 20);
             this.MenuFile.Text = "파일(&F)";
             // 
-            // MenuOpen
-            // 
-            this.MenuOpen.Name = "MenuOpen";
-            this.MenuOpen.Size = new System.Drawing.Size(203, 22);
-            this.MenuOpen.Text = "열기...(&O)";
-            this.MenuOpen.Click += new System.EventHandler(this.MenuOpen_Click);
-            // 
-            // MenuSave
-            // 
-            this.MenuSave.Enabled = false;
-            this.MenuSave.Name = "MenuSave";
-            this.MenuSave.Size = new System.Drawing.Size(203, 22);
-            this.MenuSave.Text = "저장(&S)";
-            this.MenuSave.Click += new System.EventHandler(this.MenuSave_Click);
-            // 
-            // MenuSaveAs
-            // 
-            this.MenuSaveAs.Enabled = false;
-            this.MenuSaveAs.Name = "MenuSaveAs";
-            this.MenuSaveAs.Size = new System.Drawing.Size(203, 22);
-            this.MenuSaveAs.Text = "다른 이름으로 저장...(&A)";
-            this.MenuSaveAs.Click += new System.EventHandler(this.MenuSaveAs_Click);
-            // 
-            // MenuSeperate1
-            // 
-            this.MenuSeperate1.Name = "MenuSeperate1";
-            this.MenuSeperate1.Size = new System.Drawing.Size(200, 6);
-            // 
             // MenuImport
             // 
             this.MenuImport.Enabled = false;
             this.MenuImport.Name = "MenuImport";
-            this.MenuImport.Size = new System.Drawing.Size(203, 22);
-            this.MenuImport.Text = "파일에서 불러 오기...";
+            this.MenuImport.Size = new System.Drawing.Size(202, 22);
+            this.MenuImport.Text = "파일에서 불러오기...";
             // 
             // MenuExtract
             // 
             this.MenuExtract.Enabled = false;
             this.MenuExtract.Name = "MenuExtract";
-            this.MenuExtract.Size = new System.Drawing.Size(203, 22);
-            this.MenuExtract.Text = "추출...(&E)";
+            this.MenuExtract.Size = new System.Drawing.Size(202, 22);
+            this.MenuExtract.Text = "추출...";
             this.MenuExtract.Click += new System.EventHandler(this.MenuExtract_Click);
             // 
             // MenuSeparate2
             // 
             this.MenuSeparate2.Name = "MenuSeparate2";
-            this.MenuSeparate2.Size = new System.Drawing.Size(200, 6);
+            this.MenuSeparate2.Size = new System.Drawing.Size(199, 6);
             // 
             // MenuExit
             // 
             this.MenuExit.Name = "MenuExit";
-            this.MenuExit.Size = new System.Drawing.Size(203, 22);
-            this.MenuExit.Text = "종료(&X)";
+            this.MenuExit.Size = new System.Drawing.Size(202, 22);
+            this.MenuExit.Text = "수정 마치기";
             this.MenuExit.Click += new System.EventHandler(this.MenuExit_Click);
             // 
             // MenuEncodings
             // 
             this.MenuEncodings.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.MenuJapanese,
-            this.MenuKorean});
+            this.MenuKorean,
+            this.MenuChangeEncoding});
             this.MenuEncodings.Enabled = false;
             this.MenuEncodings.Name = "MenuEncodings";
             this.MenuEncodings.Size = new System.Drawing.Size(55, 20);
@@ -170,6 +138,7 @@
             this.cv0Data.Size = new System.Drawing.Size(61, 54);
             this.cv0Data.TabIndex = 1;
             this.cv0Data.Visible = false;
+            this.cv0Data.TextChanged += new System.EventHandler(this.cv0Data_TextChanged);
             // 
             // cv1List
             // 
@@ -195,6 +164,29 @@
             this.cv2Image.TabStop = false;
             this.cv2Image.Visible = false;
             // 
+            // MenuChangeEncoding
+            // 
+            this.MenuChangeEncoding.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.MenuSaveAsKorean,
+            this.MenuSaveAsJapanese});
+            this.MenuChangeEncoding.Name = "MenuChangeEncoding";
+            this.MenuChangeEncoding.Size = new System.Drawing.Size(162, 22);
+            this.MenuChangeEncoding.Text = "인코딩 변환";
+            // 
+            // MenuSaveAsKorean
+            // 
+            this.MenuSaveAsKorean.Name = "MenuSaveAsKorean";
+            this.MenuSaveAsKorean.Size = new System.Drawing.Size(162, 22);
+            this.MenuSaveAsKorean.Text = "한국어(EUC-KR)";
+            this.MenuSaveAsKorean.Click += new System.EventHandler(this.MenuSaveAsKorean_Click);
+            // 
+            // MenuSaveAsJapanese
+            // 
+            this.MenuSaveAsJapanese.Name = "MenuSaveAsJapanese";
+            this.MenuSaveAsJapanese.Size = new System.Drawing.Size(162, 22);
+            this.MenuSaveAsJapanese.Text = "일본어(Shift-JIS)";
+            this.MenuSaveAsJapanese.Click += new System.EventHandler(this.MenuSaveAsJapanese_Click);
+            // 
             // frmCvnEditor
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
@@ -208,6 +200,7 @@
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "frmCvnEditor";
             this.Text = "cvn 편집기";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmCvnEditor_FormClosing);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.cv2Image)).EndInit();
@@ -220,10 +213,6 @@
 
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem MenuFile;
-        private System.Windows.Forms.ToolStripMenuItem MenuOpen;
-        private System.Windows.Forms.ToolStripMenuItem MenuSave;
-        private System.Windows.Forms.ToolStripMenuItem MenuSaveAs;
-        private System.Windows.Forms.ToolStripSeparator MenuSeperate1;
         private System.Windows.Forms.ToolStripMenuItem MenuExit;
         private System.Windows.Forms.TextBox cv0Data;
         private System.Windows.Forms.ToolStripMenuItem MenuEncodings;
@@ -236,6 +225,9 @@
         private System.Windows.Forms.ToolStripMenuItem MenuExtract;
         private System.Windows.Forms.ToolStripSeparator MenuSeparate2;
         private System.Windows.Forms.SaveFileDialog dlgSave;
+        private System.Windows.Forms.ToolStripMenuItem MenuChangeEncoding;
+        private System.Windows.Forms.ToolStripMenuItem MenuSaveAsKorean;
+        private System.Windows.Forms.ToolStripMenuItem MenuSaveAsJapanese;
     }
 }
 

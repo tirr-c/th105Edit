@@ -6,12 +6,26 @@ using System.IO;
 
 namespace cvn_helper
 {
-    class TenshiEntry : Stream
+    public class TenshiEntry : Stream
     {
         private Stream m_mainstream;
+        private Stream m_changedstream;
+        private Stream m_stream
+        {
+            get
+            {
+                if (m_changedstream == null) return m_mainstream;
+                else return m_changedstream;
+            }
+        }
         private string m_entry;
         private long m_offset, m_length;
         private long m_position;
+        private cvnType m_type;
+        private byte m_key_base
+        {
+            get { return (byte)(((m_offset >> 1) | 0x23) & 0xff);}
+        }
 
         public string Entry
         {
@@ -21,6 +35,15 @@ namespace cvn_helper
         {
             get { return m_entry.Split('/', '\\'); }
         }
+        public cvnType Type
+        {
+            get { return m_type; }
+        }
+        public Stream ChangedStream
+        {
+            get { return m_changedstream; }
+            set { m_changedstream = value; }
+        }
 
         public TenshiEntry(Stream MainStream, string EntryName, long Offset, long Length)
         {
@@ -28,7 +51,18 @@ namespace cvn_helper
             m_entry = EntryName;
             m_offset = Offset;
             m_length = Length;
+            m_changedstream = null;
             m_position = 0;
+
+            m_type = cvnType.Unknown;
+            string extension = m_entry.Substring(m_entry.IndexOf('.') + 1);
+            switch (extension)
+            {
+                case "cv0": m_type = cvnType.Text; break;
+                case "cv1": m_type = cvnType.CSV; break;
+                case "cv2": m_type = cvnType.Graphic; break;
+                case "cv3": m_type = cvnType.Audio; break;
+            }
         }
 
         public override bool CanRead
@@ -48,7 +82,7 @@ namespace cvn_helper
 
         public override void Flush()
         {
-            throw new NotImplementedException();
+            // do nothing
         }
 
         public override long Length
@@ -70,11 +104,26 @@ namespace cvn_helper
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            m_mainstream.Seek(m_offset+m_position, SeekOrigin.Begin);
-            int actual_read = (int)(m_length - m_position);
-            if (actual_read > count) actual_read = count;
+            int actual_read;
+            if (m_changedstream == null)
+            {
+                m_mainstream.Seek(m_offset + m_position, SeekOrigin.Begin);
+                actual_read = (int)(m_length - m_position);
+                if (actual_read > count) actual_read = count;
 
-            m_mainstream.Read(buffer, offset, actual_read);
+                actual_read = m_mainstream.Read(buffer, offset, actual_read);
+                for (int i = 0; i < actual_read; i++)
+                    buffer[offset + i] ^= m_key_base;
+            }
+            else
+            {
+                m_changedstream.Seek(m_position, SeekOrigin.Begin);
+                actual_read = (int)(m_length - m_position);
+                if (actual_read > count) actual_read = count;
+
+                actual_read = m_changedstream.Read(buffer, offset, actual_read);
+            }
+            m_position += actual_read;
             return actual_read;
         }
 
@@ -112,12 +161,12 @@ namespace cvn_helper
             return m_entry;
         }
     }
-    class TenshiEntryCollection : Collection<TenshiEntry>
+    public class TenshiEntryCollection : Collection<TenshiEntry>
     {
 
     }
 
-    class HinanawiTenshi : IDisposable
+    public class HinanawiTenshi : IDisposable
     {
         private short m_list_count;
         private uint m_list_length;

@@ -33,14 +33,9 @@
             this.MenuOpen = new System.Windows.Forms.ToolStripMenuItem();
             this.MenuSeparate1 = new System.Windows.Forms.ToolStripSeparator();
             this.MenuSave = new System.Windows.Forms.ToolStripMenuItem();
-            this.MenuExtract = new System.Windows.Forms.ToolStripMenuItem();
-            this.MenuReplace = new System.Windows.Forms.ToolStripMenuItem();
-            this.MenuDelete = new System.Windows.Forms.ToolStripMenuItem();
-            this.MenuSeparate2 = new System.Windows.Forms.ToolStripSeparator();
             this.MenuReload = new System.Windows.Forms.ToolStripMenuItem();
             this.MenuSeparate3 = new System.Windows.Forms.ToolStripSeparator();
             this.MenuExit = new System.Windows.Forms.ToolStripMenuItem();
-            this.MenuEdit = new System.Windows.Forms.ToolStripMenuItem();
             this.FileTree = new System.Windows.Forms.TreeView();
             this.MyMenu.SuspendLayout();
             this.SuspendLayout();
@@ -61,11 +56,6 @@
             this.MenuOpen,
             this.MenuSave,
             this.MenuSeparate1,
-            this.MenuEdit,
-            this.MenuExtract,
-            this.MenuReplace,
-            this.MenuDelete,
-            this.MenuSeparate2,
             this.MenuReload,
             this.MenuSeparate3,
             this.MenuExit});
@@ -94,33 +84,6 @@
             this.MenuSave.Size = new System.Drawing.Size(178, 22);
             this.MenuSave.Text = "저장";
             // 
-            // MenuExtract
-            // 
-            this.MenuExtract.Enabled = false;
-            this.MenuExtract.Name = "MenuExtract";
-            this.MenuExtract.Size = new System.Drawing.Size(178, 22);
-            this.MenuExtract.Text = "추출...";
-            // 
-            // MenuReplace
-            // 
-            this.MenuReplace.Enabled = false;
-            this.MenuReplace.Name = "MenuReplace";
-            this.MenuReplace.Size = new System.Drawing.Size(178, 22);
-            this.MenuReplace.Text = "교환...";
-            // 
-            // MenuDelete
-            // 
-            this.MenuDelete.Enabled = false;
-            this.MenuDelete.Name = "MenuDelete";
-            this.MenuDelete.ShortcutKeys = System.Windows.Forms.Keys.Delete;
-            this.MenuDelete.Size = new System.Drawing.Size(178, 22);
-            this.MenuDelete.Text = "삭제";
-            // 
-            // MenuSeparate2
-            // 
-            this.MenuSeparate2.Name = "MenuSeparate2";
-            this.MenuSeparate2.Size = new System.Drawing.Size(175, 6);
-            // 
             // MenuReload
             // 
             this.MenuReload.Enabled = false;
@@ -140,13 +103,6 @@
             this.MenuExit.Text = "종료";
             this.MenuExit.Click += new System.EventHandler(this.MenuExit_Click);
             // 
-            // MenuEdit
-            // 
-            this.MenuEdit.Enabled = false;
-            this.MenuEdit.Name = "MenuEdit";
-            this.MenuEdit.Size = new System.Drawing.Size(178, 22);
-            this.MenuEdit.Text = "수정...";
-            // 
             // FileTree
             // 
             this.FileTree.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -155,6 +111,8 @@
             this.FileTree.PathSeparator = "/";
             this.FileTree.Size = new System.Drawing.Size(404, 310);
             this.FileTree.TabIndex = 1;
+            this.FileTree.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.FileTree_NodeMouseClick);
+            this.FileTree.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.FileTree_NodeMouseDoubleClick);
             // 
             // frmArchiveManager
             // 
@@ -180,11 +138,6 @@
         private System.Windows.Forms.ToolStripMenuItem MenuOpen;
         private System.Windows.Forms.ToolStripMenuItem MenuSave;
         private System.Windows.Forms.ToolStripSeparator MenuSeparate1;
-        private System.Windows.Forms.ToolStripMenuItem MenuEdit;
-        private System.Windows.Forms.ToolStripMenuItem MenuExtract;
-        private System.Windows.Forms.ToolStripMenuItem MenuReplace;
-        private System.Windows.Forms.ToolStripMenuItem MenuDelete;
-        private System.Windows.Forms.ToolStripSeparator MenuSeparate2;
         private System.Windows.Forms.ToolStripMenuItem MenuReload;
         private System.Windows.Forms.ToolStripSeparator MenuSeparate3;
         private System.Windows.Forms.ToolStripMenuItem MenuExit;

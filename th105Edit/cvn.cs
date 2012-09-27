@@ -14,7 +14,7 @@ namespace cvn_helper
         CSV,
         Graphic,
         Audio,
-        Auto,
+        Unknown
     }
 
     public class cv1DataLine
@@ -117,6 +117,11 @@ namespace cvn_helper
         {
             Open(Path);
         }
+        public cv0(Stream fp)
+            : this()
+        {
+            Open(fp);
+        }
 
         private byte[] m_buf;
         private Encoding m_encoding;
@@ -141,6 +146,7 @@ namespace cvn_helper
         }
         public virtual void Open(Stream fp, Encoding StringEncoding)
         {
+            fp.Seek(0, SeekOrigin.Begin);
             long len = fp.Length;
             m_buf = new byte[len];
             fp.Read(m_buf, 0, (int)len);
@@ -210,6 +216,11 @@ namespace cvn_helper
         {
             m_buf = m_encoding.GetBytes(Data as string);
         }
+        public void SetData(object Data, Encoding StringEncoding)
+        {
+            m_buf = StringEncoding.GetBytes(Data as string);
+            m_encoding = StringEncoding;
+        }
 
         public override void Dispose()
         {
@@ -235,6 +246,11 @@ namespace cvn_helper
         {
             Open(Path);
         }
+        public cv1(Stream fp)
+            : this()
+        {
+            Open(fp);
+        }
 
         public string RawData
         {
@@ -250,11 +266,17 @@ namespace cvn_helper
             }
         }
         private cv1DataCollection m_records;
+        
         public override void SetData(object Data)
         {
             m_records = Data as cv1DataCollection;
-            ReloadRecords();
             UpdateRawData();
+            ReloadRecords();
+        }
+        public void ConvertEncoding(Encoding StringEncoding)
+        {
+            UpdateRawData(StringEncoding);
+            this.StringEncoding = StringEncoding;
         }
 
         public override void Open(string Path)
@@ -305,6 +327,10 @@ namespace cvn_helper
         public void UpdateRawData()
         {
             base.SetData(m_records.ToString());
+        }
+        public void UpdateRawData(Encoding StringEncoding)
+        {
+            base.SetData(m_records.ToString(), StringEncoding);
         }
 
         public override object Data
@@ -407,6 +433,11 @@ namespace cvn_helper
         {
             Open(Path);
         }
+        public cv2(Stream fp)
+            : this()
+        {
+            Open(fp);
+        }
 
         public override object Data
         {
@@ -448,6 +479,7 @@ namespace cvn_helper
         }
         public void Open(Stream fp, Stream PalettePath)
         {
+            fp.Seek(0, SeekOrigin.Begin);
             byte[] header = new byte[0x11];
             fp.Read(header, 0, 0x11);
             m_raw_format = header[0];
@@ -636,10 +668,10 @@ namespace cvn_helper
 
     class cvn
     {
-        public static cvnBase Open(string Path, cvnType FileType = cvnType.Auto)
+        public static cvnBase Open(string Path, cvnType FileType = cvnType.Unknown)
         {
             cvnType file_type = FileType;
-            if (file_type == cvnType.Auto)
+            if (file_type == cvnType.Unknown)
             {
                 string extension = Path.Substring(Path.IndexOf('.') + 1);
                 switch (extension)
@@ -664,6 +696,26 @@ namespace cvn_helper
                     catch (System.ArgumentException)
                     {
                         result.Open(Path, "palette000.pal");
+                    }
+                    return result;
+                default: return null;
+            }
+        }
+        public static cvnBase Open(Stream fp, cvnType FileType)
+        {
+            switch (FileType)
+            {
+                case cvnType.Text: return new cv0(fp);
+                case cvnType.CSV: return new cv1(fp);
+                case cvnType.Graphic:
+                    cv2 result = new cv2();
+                    try
+                    {
+                        result.Open(fp);
+                    }
+                    catch (System.ArgumentException)
+                    {
+                        result = null;
                     }
                     return result;
                 default: return null;
