@@ -85,12 +85,34 @@ namespace cvn_helper
         {
             if (e.Button != MouseButtons.Left) return;
             if (e.Node.Tag == null) return;
-            frmCvnEditor editor = new frmCvnEditor(e.Node.Tag as TenshiEntry);
+            EditStart(e.Node);
+        }
+
+        private void EditStart(TreeNode entry)
+        {
+            TenshiEntry palette = null;
+            TreeNode parent = entry.Parent;
+            if (parent != null)
+            {
+                TreeNodeCollection same_dir = parent.Nodes;
+                foreach (TreeNode i in same_dir)
+                {
+                    if (i.Tag == null) continue;
+                    string[] entry_path = (i.Tag as TenshiEntry).EntryPath;
+                    if (entry_path[entry_path.Length - 1] == "palette000.pal")
+                    {
+                        palette = i.Tag as TenshiEntry;
+                        break;
+                    }
+                }
+            }
+            frmCvnEditor editor = new frmCvnEditor(entry.Tag as TenshiEntry, palette);
+            if (editor.Failed) return;
             editor.FormClosed += new FormClosedEventHandler(EditFinished);
             editor.Show();
         }
 
-        void EditFinished(object sender, FormClosedEventArgs e)
+        private void EditFinished(object sender, FormClosedEventArgs e)
         {
             frmCvnEditor editor = sender as frmCvnEditor;
             if (!editor.Changed || editor.Discard) return;
@@ -100,9 +122,18 @@ namespace cvn_helper
         private void FileTree_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
         {
             if (e.Button != MouseButtons.Right) return;
-            ContextMenu m = new ContextMenu(ContextMenuItems);
-            m.Tag = e.Node;
+            if (e.Node.Tag == null) return;
+            MenuItem[] myContextMenu = new MenuItem[ContextMenuItems.Length];
+            ContextMenuItems.CopyTo(myContextMenu, 0);
+            foreach (MenuItem i in myContextMenu) i.Tag = e.Node;
+            myContextMenu[0].Click += new EventHandler(ContextMenu_EditClick);
+            ContextMenu m = new ContextMenu(myContextMenu);
             m.Show(sender as Control, e.Location);
+        }
+
+        void ContextMenu_EditClick(object sender, EventArgs e)
+        {
+            EditStart((sender as MenuItem).Tag as TreeNode);
         }
     }
 }

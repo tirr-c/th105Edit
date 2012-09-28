@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.menuStrip1 = new System.Windows.Forms.MenuStrip();
+            this.myMenu = new System.Windows.Forms.MenuStrip();
             this.MenuFile = new System.Windows.Forms.ToolStripMenuItem();
             this.MenuImport = new System.Windows.Forms.ToolStripMenuItem();
             this.MenuExtract = new System.Windows.Forms.ToolStripMenuItem();
@@ -37,28 +37,28 @@
             this.MenuEncodings = new System.Windows.Forms.ToolStripMenuItem();
             this.MenuJapanese = new System.Windows.Forms.ToolStripMenuItem();
             this.MenuKorean = new System.Windows.Forms.ToolStripMenuItem();
+            this.MenuChangeEncoding = new System.Windows.Forms.ToolStripMenuItem();
+            this.MenuSaveAsKorean = new System.Windows.Forms.ToolStripMenuItem();
+            this.MenuSaveAsJapanese = new System.Windows.Forms.ToolStripMenuItem();
             this.cv0Data = new System.Windows.Forms.TextBox();
             this.dlgOpen = new System.Windows.Forms.OpenFileDialog();
             this.cv1List = new System.Windows.Forms.ListView();
             this.cv2Image = new System.Windows.Forms.PictureBox();
             this.dlgSave = new System.Windows.Forms.SaveFileDialog();
-            this.MenuChangeEncoding = new System.Windows.Forms.ToolStripMenuItem();
-            this.MenuSaveAsKorean = new System.Windows.Forms.ToolStripMenuItem();
-            this.MenuSaveAsJapanese = new System.Windows.Forms.ToolStripMenuItem();
-            this.menuStrip1.SuspendLayout();
+            this.myMenu.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.cv2Image)).BeginInit();
             this.SuspendLayout();
             // 
-            // menuStrip1
+            // myMenu
             // 
-            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.myMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.MenuFile,
             this.MenuEncodings});
-            this.menuStrip1.Location = new System.Drawing.Point(0, 0);
-            this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(393, 24);
-            this.menuStrip1.TabIndex = 0;
-            this.menuStrip1.Text = "menuStrip1";
+            this.myMenu.Location = new System.Drawing.Point(0, 0);
+            this.myMenu.Name = "myMenu";
+            this.myMenu.Size = new System.Drawing.Size(393, 24);
+            this.myMenu.TabIndex = 0;
+            this.myMenu.Text = "menuStrip1";
             // 
             // MenuFile
             // 
@@ -75,26 +75,26 @@
             // 
             this.MenuImport.Enabled = false;
             this.MenuImport.Name = "MenuImport";
-            this.MenuImport.Size = new System.Drawing.Size(202, 22);
+            this.MenuImport.Size = new System.Drawing.Size(183, 22);
             this.MenuImport.Text = "파일에서 불러오기...";
             // 
             // MenuExtract
             // 
             this.MenuExtract.Enabled = false;
             this.MenuExtract.Name = "MenuExtract";
-            this.MenuExtract.Size = new System.Drawing.Size(202, 22);
+            this.MenuExtract.Size = new System.Drawing.Size(183, 22);
             this.MenuExtract.Text = "추출...";
             this.MenuExtract.Click += new System.EventHandler(this.MenuExtract_Click);
             // 
             // MenuSeparate2
             // 
             this.MenuSeparate2.Name = "MenuSeparate2";
-            this.MenuSeparate2.Size = new System.Drawing.Size(199, 6);
+            this.MenuSeparate2.Size = new System.Drawing.Size(180, 6);
             // 
             // MenuExit
             // 
             this.MenuExit.Name = "MenuExit";
-            this.MenuExit.Size = new System.Drawing.Size(202, 22);
+            this.MenuExit.Size = new System.Drawing.Size(183, 22);
             this.MenuExit.Text = "수정 마치기";
             this.MenuExit.Click += new System.EventHandler(this.MenuExit_Click);
             // 
@@ -125,6 +125,29 @@
             this.MenuKorean.Size = new System.Drawing.Size(162, 22);
             this.MenuKorean.Text = "EUC-KR(한국어)";
             this.MenuKorean.CheckedChanged += new System.EventHandler(this.MenuKorean_CheckedChanged);
+            // 
+            // MenuChangeEncoding
+            // 
+            this.MenuChangeEncoding.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.MenuSaveAsKorean,
+            this.MenuSaveAsJapanese});
+            this.MenuChangeEncoding.Name = "MenuChangeEncoding";
+            this.MenuChangeEncoding.Size = new System.Drawing.Size(162, 22);
+            this.MenuChangeEncoding.Text = "인코딩 변환";
+            // 
+            // MenuSaveAsKorean
+            // 
+            this.MenuSaveAsKorean.Name = "MenuSaveAsKorean";
+            this.MenuSaveAsKorean.Size = new System.Drawing.Size(162, 22);
+            this.MenuSaveAsKorean.Text = "한국어(EUC-KR)";
+            this.MenuSaveAsKorean.Click += new System.EventHandler(this.MenuSaveAsKorean_Click);
+            // 
+            // MenuSaveAsJapanese
+            // 
+            this.MenuSaveAsJapanese.Name = "MenuSaveAsJapanese";
+            this.MenuSaveAsJapanese.Size = new System.Drawing.Size(162, 22);
+            this.MenuSaveAsJapanese.Text = "일본어(Shift-JIS)";
+            this.MenuSaveAsJapanese.Click += new System.EventHandler(this.MenuSaveAsJapanese_Click);
             // 
             // cv0Data
             // 
@@ -164,29 +187,6 @@
             this.cv2Image.TabStop = false;
             this.cv2Image.Visible = false;
             // 
-            // MenuChangeEncoding
-            // 
-            this.MenuChangeEncoding.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.MenuSaveAsKorean,
-            this.MenuSaveAsJapanese});
-            this.MenuChangeEncoding.Name = "MenuChangeEncoding";
-            this.MenuChangeEncoding.Size = new System.Drawing.Size(162, 22);
-            this.MenuChangeEncoding.Text = "인코딩 변환";
-            // 
-            // MenuSaveAsKorean
-            // 
-            this.MenuSaveAsKorean.Name = "MenuSaveAsKorean";
-            this.MenuSaveAsKorean.Size = new System.Drawing.Size(162, 22);
-            this.MenuSaveAsKorean.Text = "한국어(EUC-KR)";
-            this.MenuSaveAsKorean.Click += new System.EventHandler(this.MenuSaveAsKorean_Click);
-            // 
-            // MenuSaveAsJapanese
-            // 
-            this.MenuSaveAsJapanese.Name = "MenuSaveAsJapanese";
-            this.MenuSaveAsJapanese.Size = new System.Drawing.Size(162, 22);
-            this.MenuSaveAsJapanese.Text = "일본어(Shift-JIS)";
-            this.MenuSaveAsJapanese.Click += new System.EventHandler(this.MenuSaveAsJapanese_Click);
-            // 
             // frmCvnEditor
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
@@ -196,13 +196,13 @@
             this.Controls.Add(this.cv2Image);
             this.Controls.Add(this.cv1List);
             this.Controls.Add(this.cv0Data);
-            this.Controls.Add(this.menuStrip1);
-            this.MainMenuStrip = this.menuStrip1;
+            this.Controls.Add(this.myMenu);
+            this.MainMenuStrip = this.myMenu;
             this.Name = "frmCvnEditor";
             this.Text = "cvn 편집기";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmCvnEditor_FormClosing);
-            this.menuStrip1.ResumeLayout(false);
-            this.menuStrip1.PerformLayout();
+            this.myMenu.ResumeLayout(false);
+            this.myMenu.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.cv2Image)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -211,7 +211,7 @@
 
         #endregion
 
-        private System.Windows.Forms.MenuStrip menuStrip1;
+        private System.Windows.Forms.MenuStrip myMenu;
         private System.Windows.Forms.ToolStripMenuItem MenuFile;
         private System.Windows.Forms.ToolStripMenuItem MenuExit;
         private System.Windows.Forms.TextBox cv0Data;

@@ -11,12 +11,13 @@ namespace cvn_helper
 {
     public partial class frmCvnEditor : Form
     {
-        private TenshiEntry m_entry;
+        private TenshiEntry m_entry, m_palette;
         private cvnBase m_workingfile;
         private string m_workingpath;
         private bool m_discard_changes;
         private bool m_is_from_stream;
         private bool m_changed;
+        private bool m_failed;
 
         private static Encoding EUCKR = Encoding.GetEncoding(949);
         private static Encoding ShiftJIS = Encoding.GetEncoding("Shift-JIS");
@@ -37,22 +38,42 @@ namespace cvn_helper
         {
             get { return m_entry; }
         }
+        public bool Failed
+        {
+            get { return m_failed; }
+        }
 
         public frmCvnEditor()
         {
+            m_entry = m_palette = null;
             m_workingfile = null;
             m_workingpath = string.Empty;
             m_discard_changes = true;
             m_is_from_stream = false;
             m_changed = false;
+            m_failed = false;
             InitializeComponent();
         }
-        public frmCvnEditor(TenshiEntry BaseFile)
+        public frmCvnEditor(TenshiEntry BaseFile, TenshiEntry Palette = null)
             : this()
         {
             m_entry = BaseFile;
+            m_palette = Palette;
             m_workingpath = m_entry.Entry;
-            m_workingfile = cvn.Open(BaseFile, BaseFile.Type);
+            try
+            {
+                m_workingfile = cvn.Open(BaseFile, BaseFile.Type, Palette);
+            }
+            catch (FormatException)
+            {
+                m_failed = true;
+                return;
+            }
+            if (m_workingfile == null)
+            {
+                m_failed = true;
+                return;
+            }
             m_is_from_stream = true;
             RefreshView();
             m_changed = false;
@@ -71,12 +92,17 @@ namespace cvn_helper
                     break;
                 case cvnType.Graphic:
                     cv2Image.Image = m_workingfile.Data as Bitmap;
+                    int w = Width - cv2Image.Width + cv2Image.Image.Width;
+                    int h = Height - cv2Image.Height + cv2Image.Image.Height;
+                    Width = w;
+                    Height = h;
                     break;
             }
         }
 
         private void ChangeEnabled(cvnType type)
         {
+            MenuExtract.Enabled = true;
             Control[] controls = new Control[] { cv0Data, cv1List, cv2Image };
             int pass_index = 3;
             switch (type)
