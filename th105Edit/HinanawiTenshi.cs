@@ -42,7 +42,7 @@ namespace cvn_helper
         public Stream ChangedStream
         {
             get { return m_changedstream; }
-            set { m_changedstream = value; }
+            set { m_changedstream = value; m_position = 0; }
         }
 
         public TenshiEntry(Stream MainStream, string EntryName, long Offset, long Length)
@@ -87,7 +87,11 @@ namespace cvn_helper
 
         public override long Length
         {
-            get { return m_length; }
+            get
+            {
+                if (m_changedstream == null) return m_length;
+                else return m_changedstream.Length;
+            }
         }
 
         public override long Position

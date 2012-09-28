@@ -127,8 +127,24 @@ namespace cvn_helper
             ContextMenuItems.CopyTo(myContextMenu, 0);
             foreach (MenuItem i in myContextMenu) i.Tag = e.Node;
             myContextMenu[0].Click += new EventHandler(ContextMenu_EditClick);
+            myContextMenu[2].Click += new EventHandler(ContextMenu_ReplaceClick);
             ContextMenu m = new ContextMenu(myContextMenu);
             m.Show(sender as Control, e.Location);
+        }
+
+        void ContextMenu_ReplaceClick(object sender, EventArgs e)
+        {
+            OpenFileDialog ofd = new OpenFileDialog();
+            TenshiEntry entry = ((sender as MenuItem).Tag as TreeNode).Tag as TenshiEntry;
+            string entry_str = entry.Entry;
+            string ext = entry_str.Substring(entry_str.IndexOf('.')+1);
+            ofd.Filter = ext + " (*." + ext + "|*." + ext;
+            ofd.FilterIndex = 1;
+            ofd.CheckFileExists = ofd.CheckPathExists = true;
+            if (ofd.ShowDialog() == DialogResult.OK)
+            {
+                entry.ChangedStream = ofd.OpenFile();
+            }
         }
 
         void ContextMenu_EditClick(object sender, EventArgs e)
