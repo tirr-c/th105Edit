@@ -214,6 +214,7 @@ namespace th105Edit
             {
                 File.Delete(m_workingpath);
                 File.Move(temp_name, m_workingpath);
+                m_workingfile.Open(m_workingpath);
             }
         }
 
@@ -231,6 +232,15 @@ namespace th105Edit
                 th.Start(sfd.FileName);
                 m_save_progress.ShowDialog();
                 th.Abort();
+                if (MenuOpen.Enabled == false)
+                {
+                    FinalizeOpenSave(false);
+                    File.Delete(sfd.FileName);
+                }
+                else
+                {
+                    m_workingfile.Open(sfd.FileName);
+                }
             }
         }
 

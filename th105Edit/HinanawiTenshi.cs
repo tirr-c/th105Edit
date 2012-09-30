@@ -380,10 +380,6 @@ namespace th105Edit
                     save_stream.Write(buf, 0, buf.Length);
                     if (callback != null) callback(++count, entry_count);
                 }
-                save_stream.Close();
-                // 다시 열기
-                m_stream.Close();
-                Open(Path);
             }
             catch
             {
