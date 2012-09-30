@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // 어셈블리의 일반 정보는 다음 특성 집합을 통해 제어됩니다.
 // 어셈블리와 관련된 정보를 수정하려면
 // 이 특성 값을 변경하십시오.
-[assembly: AssemblyTitle("cvn_helper")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("동방비상천 데이터 에디터")]
+[assembly: AssemblyDescription("데이터 파일을 열고, 추출하고, 수정할 수 있는 툴")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("cvn_helper")]
-[assembly: AssemblyCopyright("Copyright ©  2012")]
+[assembly: AssemblyCompany("@VBChunguk")]
+[assembly: AssemblyProduct("th105Edit")]
+[assembly: AssemblyCopyright("Copyright @VBChunguk  2012")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
