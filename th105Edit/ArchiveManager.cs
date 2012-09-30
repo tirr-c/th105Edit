@@ -47,7 +47,6 @@ namespace th105Edit
         {
             InitializeComponent();
             m_workingfile = new HinanawiTenshi();
-            m_save_progress = new frmSaveProgress();
 
             ContextMenuItems[0].Click += new EventHandler(ContextMenu_EditClick);
             ContextMenuItems[1].Click += new EventHandler(ContextMenu_ExtractClick);
@@ -200,6 +199,7 @@ namespace th105Edit
         private void MenuSave_Click(object sender, EventArgs e)
         {
             StartOpenSave();
+            m_save_progress = new frmSaveProgress();
             Thread th = new Thread(new ParameterizedThreadStart(SaveWork));
             string temp_name = Path.GetTempFileName();
             th.Start(temp_name);
@@ -207,7 +207,7 @@ namespace th105Edit
             th.Abort();
             if (MenuOpen.Enabled == false)
             {
-                FinalizeOpenSave();
+                FinalizeOpenSave(true);
                 File.Delete(temp_name);
             }
             else
@@ -226,6 +226,7 @@ namespace th105Edit
             if (sfd.ShowDialog() == DialogResult.OK)
             {
                 StartOpenSave();
+                m_save_progress = new frmSaveProgress();
                 Thread th = new Thread(new ParameterizedThreadStart(SaveWork));
                 th.Start(sfd.FileName);
                 m_save_progress.ShowDialog();
@@ -237,7 +238,7 @@ namespace th105Edit
         {
             m_workingfile.Open(Path as string);
             Invoke(new OpenFileCallback(OpenFile), Path);
-            Invoke(new OpenSaveCallback(FinalizeOpenSave));
+            Invoke(new OpenSaveCallback(FinalizeOpenSave), false);
         }
         private void SaveWork(object Path)
         {
@@ -250,11 +251,11 @@ namespace th105Edit
             }
             finally
             {
-                Invoke(new OpenSaveCallback(FinalizeOpenSave));
+                Invoke(new OpenSaveCallback(FinalizeOpenSave), true);
             }
         }
 
-        private delegate void OpenSaveCallback();
+        private delegate void OpenSaveCallback(bool isSave);
         private void StartOpenSave()
         {
             MenuOpen.Enabled = false;
@@ -263,14 +264,14 @@ namespace th105Edit
             MenuReload.Enabled = false;
             FileTree.Enabled = false;
         }
-        private void FinalizeOpenSave()
+        private void FinalizeOpenSave(bool isSave)
         {
             MenuOpen.Enabled = true;
             MenuSave.Enabled = true;
             MenuSaveAs.Enabled = true;
             MenuReload.Enabled = true;
             FileTree.Enabled = true;
-            m_save_progress.Close();
+            if (isSave) m_save_progress.Close();
         }
 
         private void MenuReload_Click(object sender, EventArgs e)
