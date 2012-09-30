@@ -1,4 +1,4 @@
-﻿namespace cvn_helper
+﻿namespace th105Edit
 {
     partial class frmArchiveManager
     {
@@ -31,12 +31,13 @@
             this.MyMenu = new System.Windows.Forms.MenuStrip();
             this.MenuFile = new System.Windows.Forms.ToolStripMenuItem();
             this.MenuOpen = new System.Windows.Forms.ToolStripMenuItem();
-            this.MenuSeparate1 = new System.Windows.Forms.ToolStripSeparator();
             this.MenuSave = new System.Windows.Forms.ToolStripMenuItem();
+            this.MenuSeparate1 = new System.Windows.Forms.ToolStripSeparator();
             this.MenuReload = new System.Windows.Forms.ToolStripMenuItem();
             this.MenuSeparate3 = new System.Windows.Forms.ToolStripSeparator();
             this.MenuExit = new System.Windows.Forms.ToolStripMenuItem();
             this.FileTree = new System.Windows.Forms.TreeView();
+            this.MenuSaveAs = new System.Windows.Forms.ToolStripMenuItem();
             this.MyMenu.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -55,6 +56,7 @@
             this.MenuFile.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.MenuOpen,
             this.MenuSave,
+            this.MenuSaveAs,
             this.MenuSeparate1,
             this.MenuReload,
             this.MenuSeparate3,
@@ -67,39 +69,41 @@
             // 
             this.MenuOpen.Name = "MenuOpen";
             this.MenuOpen.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
-            this.MenuOpen.Size = new System.Drawing.Size(178, 22);
+            this.MenuOpen.Size = new System.Drawing.Size(187, 22);
             this.MenuOpen.Text = "열기...";
             this.MenuOpen.Click += new System.EventHandler(this.MenuOpen_Click);
-            // 
-            // MenuSeparate1
-            // 
-            this.MenuSeparate1.Name = "MenuSeparate1";
-            this.MenuSeparate1.Size = new System.Drawing.Size(175, 6);
             // 
             // MenuSave
             // 
             this.MenuSave.Enabled = false;
             this.MenuSave.Name = "MenuSave";
             this.MenuSave.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
-            this.MenuSave.Size = new System.Drawing.Size(178, 22);
+            this.MenuSave.Size = new System.Drawing.Size(187, 22);
             this.MenuSave.Text = "저장";
+            this.MenuSave.Click += new System.EventHandler(this.MenuSave_Click);
+            // 
+            // MenuSeparate1
+            // 
+            this.MenuSeparate1.Name = "MenuSeparate1";
+            this.MenuSeparate1.Size = new System.Drawing.Size(184, 6);
             // 
             // MenuReload
             // 
             this.MenuReload.Enabled = false;
             this.MenuReload.Name = "MenuReload";
-            this.MenuReload.Size = new System.Drawing.Size(178, 22);
+            this.MenuReload.Size = new System.Drawing.Size(187, 22);
             this.MenuReload.Text = "마지막 저장 상태로";
+            this.MenuReload.Click += new System.EventHandler(this.MenuReload_Click);
             // 
             // MenuSeparate3
             // 
             this.MenuSeparate3.Name = "MenuSeparate3";
-            this.MenuSeparate3.Size = new System.Drawing.Size(175, 6);
+            this.MenuSeparate3.Size = new System.Drawing.Size(184, 6);
             // 
             // MenuExit
             // 
             this.MenuExit.Name = "MenuExit";
-            this.MenuExit.Size = new System.Drawing.Size(178, 22);
+            this.MenuExit.Size = new System.Drawing.Size(187, 22);
             this.MenuExit.Text = "종료";
             this.MenuExit.Click += new System.EventHandler(this.MenuExit_Click);
             // 
@@ -113,6 +117,14 @@
             this.FileTree.TabIndex = 1;
             this.FileTree.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.FileTree_NodeMouseClick);
             this.FileTree.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.FileTree_NodeMouseDoubleClick);
+            // 
+            // MenuSaveAs
+            // 
+            this.MenuSaveAs.Enabled = false;
+            this.MenuSaveAs.Name = "MenuSaveAs";
+            this.MenuSaveAs.Size = new System.Drawing.Size(187, 22);
+            this.MenuSaveAs.Text = "다른 이름으로 저장...";
+            this.MenuSaveAs.Click += new System.EventHandler(this.MenuSaveAs_Click);
             // 
             // frmArchiveManager
             // 
@@ -142,5 +154,6 @@
         private System.Windows.Forms.ToolStripSeparator MenuSeparate3;
         private System.Windows.Forms.ToolStripMenuItem MenuExit;
         private System.Windows.Forms.TreeView FileTree;
+        private System.Windows.Forms.ToolStripMenuItem MenuSaveAs;
     }
 }

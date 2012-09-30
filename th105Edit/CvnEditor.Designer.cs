@@ -1,4 +1,4 @@
-﻿namespace cvn_helper
+﻿namespace th105Edit
 {
     partial class frmCvnEditor
     {
@@ -41,10 +41,8 @@
             this.MenuSaveAsKorean = new System.Windows.Forms.ToolStripMenuItem();
             this.MenuSaveAsJapanese = new System.Windows.Forms.ToolStripMenuItem();
             this.cv0Data = new System.Windows.Forms.TextBox();
-            this.dlgOpen = new System.Windows.Forms.OpenFileDialog();
             this.cv1List = new System.Windows.Forms.ListView();
             this.cv2Image = new System.Windows.Forms.PictureBox();
-            this.dlgSave = new System.Windows.Forms.SaveFileDialog();
             this.myMenu.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.cv2Image)).BeginInit();
             this.SuspendLayout();
@@ -77,6 +75,7 @@
             this.MenuImport.Name = "MenuImport";
             this.MenuImport.Size = new System.Drawing.Size(183, 22);
             this.MenuImport.Text = "파일에서 불러오기...";
+            this.MenuImport.Click += new System.EventHandler(this.MenuImport_Click);
             // 
             // MenuExtract
             // 
@@ -218,13 +217,11 @@
         private System.Windows.Forms.ToolStripMenuItem MenuEncodings;
         private System.Windows.Forms.ToolStripMenuItem MenuJapanese;
         private System.Windows.Forms.ToolStripMenuItem MenuKorean;
-        private System.Windows.Forms.OpenFileDialog dlgOpen;
         private System.Windows.Forms.ListView cv1List;
         private System.Windows.Forms.PictureBox cv2Image;
         private System.Windows.Forms.ToolStripMenuItem MenuImport;
         private System.Windows.Forms.ToolStripMenuItem MenuExtract;
         private System.Windows.Forms.ToolStripSeparator MenuSeparate2;
-        private System.Windows.Forms.SaveFileDialog dlgSave;
         private System.Windows.Forms.ToolStripMenuItem MenuChangeEncoding;
         private System.Windows.Forms.ToolStripMenuItem MenuSaveAsKorean;
         private System.Windows.Forms.ToolStripMenuItem MenuSaveAsJapanese;

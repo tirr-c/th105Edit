@@ -5,13 +5,16 @@ using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
+using System.Threading;
+using System.IO;
 
-namespace cvn_helper
+namespace th105Edit
 {
     public partial class frmArchiveManager : Form
     {
         HinanawiTenshi m_workingfile;
         string m_workingpath;
+        frmSaveProgress m_save_progress;
 
         private static MenuItem[] ContextMenuItems = new MenuItem[]
         {
@@ -24,8 +27,14 @@ namespace cvn_helper
         {
             InitializeComponent();
             m_workingfile = new HinanawiTenshi();
+            m_save_progress = new frmSaveProgress();
+
+            ContextMenuItems[0].Click += new EventHandler(ContextMenu_EditClick);
+            ContextMenuItems[1].Click += new EventHandler(ContextMenu_ExtractClick);
+            ContextMenuItems[2].Click += new EventHandler(ContextMenu_ReplaceClick);
         }
 
+        private delegate void OpenFileCallback(string Path);
         private void OpenFile(string Path)
         {
             m_workingpath = Path;
@@ -72,7 +81,9 @@ namespace cvn_helper
 
             if (ofd.ShowDialog() == DialogResult.OK)
             {
-                OpenFile(ofd.FileName);
+                StartOpenSave();
+                Thread th = new Thread(new ParameterizedThreadStart(OpenWork));
+                th.Start(ofd.FileName);
             }
         }
 
@@ -126,10 +137,24 @@ namespace cvn_helper
             MenuItem[] myContextMenu = new MenuItem[ContextMenuItems.Length];
             ContextMenuItems.CopyTo(myContextMenu, 0);
             foreach (MenuItem i in myContextMenu) i.Tag = e.Node;
-            myContextMenu[0].Click += new EventHandler(ContextMenu_EditClick);
-            myContextMenu[2].Click += new EventHandler(ContextMenu_ReplaceClick);
             ContextMenu m = new ContextMenu(myContextMenu);
             m.Show(sender as Control, e.Location);
+        }
+
+        void ContextMenu_ExtractClick(object sender, EventArgs e)
+        {
+            SaveFileDialog sfd = new SaveFileDialog();
+            TenshiEntry entry = ((sender as MenuItem).Tag as TreeNode).Tag as TenshiEntry;
+            string entry_str = entry.Entry;
+            string ext = entry_str.Substring(entry_str.IndexOf('.') + 1);
+            sfd.Filter = ext + "(*." + ext + ")|*." + ext + "|모든 파일(*.*)|*.*";
+            sfd.OverwritePrompt = true;
+            if (sfd.ShowDialog() == DialogResult.OK)
+            {
+                byte[] buf = new byte[entry.Length];
+                entry.Read(buf, 0, (int)entry.Length);
+                File.WriteAllBytes(sfd.FileName, buf);
+            }
         }
 
         void ContextMenu_ReplaceClick(object sender, EventArgs e)
@@ -138,7 +163,7 @@ namespace cvn_helper
             TenshiEntry entry = ((sender as MenuItem).Tag as TreeNode).Tag as TenshiEntry;
             string entry_str = entry.Entry;
             string ext = entry_str.Substring(entry_str.IndexOf('.')+1);
-            ofd.Filter = ext + " (*." + ext + "|*." + ext;
+            ofd.Filter = ext + "(*." + ext + ")|*." + ext;
             ofd.FilterIndex = 1;
             ofd.CheckFileExists = ofd.CheckPathExists = true;
             if (ofd.ShowDialog() == DialogResult.OK)
@@ -150,6 +175,89 @@ namespace cvn_helper
         void ContextMenu_EditClick(object sender, EventArgs e)
         {
             EditStart((sender as MenuItem).Tag as TreeNode);
+        }
+
+        private void MenuSave_Click(object sender, EventArgs e)
+        {
+            StartOpenSave();
+            Thread th = new Thread(new ParameterizedThreadStart(SaveWork));
+            string temp_name = Path.GetTempFileName();
+            th.Start(temp_name);
+            m_save_progress.ShowDialog();
+            th.Abort();
+            if (MenuOpen.Enabled == false)
+            {
+                FinalizeOpenSave();
+                File.Delete(temp_name);
+            }
+            else
+            {
+                File.Delete(m_workingpath);
+                File.Move(temp_name, m_workingpath);
+            }
+        }
+
+        private void MenuSaveAs_Click(object sender, EventArgs e)
+        {
+            SaveFileDialog sfd = new SaveFileDialog();
+            sfd.Filter = "동방비상천 데이터 파일(*.dat)|*.dat|모든 파일(*.*)|*.*";
+            sfd.FilterIndex = 1;
+            sfd.OverwritePrompt = true;
+            if (sfd.ShowDialog() == DialogResult.OK)
+            {
+                StartOpenSave();
+                Thread th = new Thread(new ParameterizedThreadStart(SaveWork));
+                th.Start(sfd.FileName);
+                m_save_progress.ShowDialog();
+                th.Abort();
+            }
+        }
+
+        private void OpenWork(object Path)
+        {
+            m_workingfile.Open(Path as string);
+            Invoke(new OpenFileCallback(OpenFile), Path);
+            Invoke(new OpenSaveCallback(FinalizeOpenSave));
+        }
+        private void SaveWork(object Path)
+        {
+            try
+            {
+                m_workingfile.Save(Path as string, new HinanawiTenshi.SaveFileCallback(m_save_progress.UpdateProgress));
+            }
+            catch
+            {
+            }
+            finally
+            {
+                Invoke(new OpenSaveCallback(FinalizeOpenSave));
+            }
+        }
+
+        private delegate void OpenSaveCallback();
+        private void StartOpenSave()
+        {
+            MenuOpen.Enabled = false;
+            MenuSave.Enabled = false;
+            MenuSaveAs.Enabled = false;
+            MenuReload.Enabled = false;
+            FileTree.Enabled = false;
+        }
+        private void FinalizeOpenSave()
+        {
+            MenuOpen.Enabled = true;
+            MenuSave.Enabled = true;
+            MenuSaveAs.Enabled = true;
+            MenuReload.Enabled = true;
+            FileTree.Enabled = true;
+            m_save_progress.Close();
+        }
+
+        private void MenuReload_Click(object sender, EventArgs e)
+        {
+            StartOpenSave();
+            Thread th = new Thread(new ParameterizedThreadStart(OpenWork));
+            th.Start(m_workingpath);
         }
     }
 }

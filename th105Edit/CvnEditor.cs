@@ -7,7 +7,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.IO;
 
-namespace cvn_helper
+namespace th105Edit
 {
     public partial class frmCvnEditor : Form
     {
@@ -103,6 +103,7 @@ namespace cvn_helper
         private void ChangeEnabled(cvnType type)
         {
             MenuExtract.Enabled = true;
+            MenuImport.Enabled = true;
             Control[] controls = new Control[] { cv0Data, cv1List, cv2Image };
             int pass_index = 3;
             switch (type)
@@ -216,7 +217,7 @@ namespace cvn_helper
 
         private void MenuExtract_Click(object sender, EventArgs e)
         {
-            dlgSave.Reset();
+            SaveFileDialog dlgSave = new SaveFileDialog();
             switch (m_workingfile.Type)
             {
                 case cvnType.Text:
@@ -268,6 +269,44 @@ namespace cvn_helper
 
         private void cv0Data_TextChanged(object sender, EventArgs e)
         {
+            m_changed = true;
+        }
+
+        private void MenuImport_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog ofd = new OpenFileDialog();
+            switch (m_workingfile.Type)
+            {
+                case cvnType.Text:
+                    ofd.Filter = "텍스트 파일(*.txt)|*.txt";
+                    break;
+                case cvnType.CSV:
+                    ofd.Filter = "CSV 시트(*.csv)|*.csv";
+                    break;
+                case cvnType.Graphic:
+                    ofd.Filter = "PNG(*.png)|*.png";
+                    break;
+            }
+            ofd.CheckFileExists = ofd.CheckPathExists = true;
+            if (ofd.ShowDialog() == DialogResult.OK)
+            {
+                object data;
+                switch (m_workingfile.Type)
+                {
+                    case cvnType.Text:
+                    case cvnType.CSV:
+                        data = File.ReadAllText(ofd.FileName, (m_workingfile as cv0).StringEncoding);
+                        break;
+                    case cvnType.Graphic:
+                        data = Bitmap.FromFile(ofd.FileName);
+                        break;
+                    default:
+                        data = null;
+                        break;
+                }
+                m_workingfile.SetData(data);
+            }
+            RefreshView();
             m_changed = true;
         }
     }

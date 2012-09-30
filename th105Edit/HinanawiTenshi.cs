@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Text;
 using System.IO;
+using System.Threading;
 
-namespace cvn_helper
+namespace th105Edit
 {
     public class TenshiEntry : Stream
     {
@@ -19,12 +20,23 @@ namespace cvn_helper
             }
         }
         private string m_entry;
-        private long m_offset, m_length;
+        private long m_offset, m_length, m_keyoffset;
         private long m_position;
         private cvnType m_type;
-        private byte m_key_base
+        private byte KeyBase
         {
-            get { return (byte)(((m_offset >> 1) | 0x23) & 0xff);}
+            get
+            {
+                if(m_keyoffset == 0) return (byte)(((m_offset >> 1) | 0x23) & 0xff);
+                else return (byte)(((m_keyoffset >> 1) | 0x23) & 0xff);
+            }
+        }
+        private byte OriginalKeyBase
+        {
+            get
+            {
+                return (byte)(((m_offset >> 1) | 0x23) & 0xff);
+            }
         }
 
         public string Entry
@@ -42,7 +54,22 @@ namespace cvn_helper
         public Stream ChangedStream
         {
             get { return m_changedstream; }
-            set { m_changedstream = value; m_position = 0; }
+            set
+            {
+                if (m_changedstream != null)
+                {
+                    m_changedstream.Close(); m_changedstream.Dispose();
+                } m_changedstream = value; m_position = 0;
+            }
+        }
+        public long NewOffset
+        {
+            set { m_keyoffset = value; }
+        }
+
+        public int EntryLength
+        {
+            get { return 9 + Encoding.GetEncoding("Shift-JIS").GetByteCount(m_entry); }
         }
 
         public TenshiEntry(Stream MainStream, string EntryName, long Offset, long Length)
@@ -117,7 +144,7 @@ namespace cvn_helper
 
                 actual_read = m_mainstream.Read(buffer, offset, actual_read);
                 for (int i = 0; i < actual_read; i++)
-                    buffer[offset + i] ^= m_key_base;
+                    buffer[offset + i] ^= KeyBase;
             }
             else
             {
@@ -126,6 +153,36 @@ namespace cvn_helper
                 if (actual_read > count) actual_read = count;
 
                 actual_read = m_changedstream.Read(buffer, offset, actual_read);
+            }
+            m_position += actual_read;
+            return actual_read;
+        }
+        public int ReadEncrpyted(byte[] buffer, int offset, int count)
+        {
+            int actual_read;
+            byte key_base;
+            if (m_changedstream == null)
+            {
+                m_mainstream.Seek(m_offset + m_position, SeekOrigin.Begin);
+                actual_read = (int)(m_length - m_position);
+                if (actual_read > count) actual_read = count;
+
+                actual_read = m_mainstream.Read(buffer, offset, actual_read);
+                key_base = (byte)(OriginalKeyBase ^ KeyBase);
+            }
+            else
+            {
+                m_changedstream.Seek(m_position, SeekOrigin.Begin);
+                actual_read = (int)(m_length - m_position);
+                if (actual_read > count) actual_read = count;
+
+                actual_read = m_changedstream.Read(buffer, offset, actual_read);
+                key_base = KeyBase;
+            }
+            if (key_base != 0)
+            {
+                for (int i = 0; i < actual_read; i++)
+                    buffer[offset + i] ^= key_base;
             }
             m_position += actual_read;
             return actual_read;
@@ -172,6 +229,8 @@ namespace cvn_helper
 
     public class HinanawiTenshi : IDisposable
     {
+        public delegate void SaveFileCallback(ushort count, ushort total);
+
         private short m_list_count;
         private uint m_list_length;
         private FileStream m_stream;
@@ -180,6 +239,7 @@ namespace cvn_helper
         {
             get { return m_entries; }
         }
+        private Encoding ShiftJIS;
 
         private const byte key_base = 0xc5;
         private const byte key_delta = 0x83;
@@ -191,6 +251,7 @@ namespace cvn_helper
             m_list_length = 0;
             m_stream = null;
             m_entries = new TenshiEntryCollection();
+            ShiftJIS = Encoding.GetEncoding("Shift-JIS");
         }
 
         public HinanawiTenshi(string Path)
@@ -201,6 +262,7 @@ namespace cvn_helper
 
         public void Open(string Path)
         {
+            if (m_stream != null) m_stream.Close();
             m_stream = new FileStream(Path, FileMode.Open);
             m_entries.Clear();
             byte[] buf = new byte[4];
@@ -222,7 +284,6 @@ namespace cvn_helper
             }
 
             uint c = 0;
-            Encoding ShiftJIS = Encoding.GetEncoding("Shift-JIS");
             for (short i = 0; i < m_list_count; i++)
             {
                 uint off, len;
@@ -239,6 +300,74 @@ namespace cvn_helper
                 m_entries.Add(new TenshiEntry(m_stream, entry_name, (long)off, (long)len));
             }
         }
+        public void Save(string Path, SaveFileCallback callback = null)
+        {
+            FileStream save_stream = new FileStream(Path, FileMode.Create);
+            try
+            {
+                ushort entry_count = (ushort)m_entries.Count;
+                uint entry_len = 0;
+
+                // 엔트리 리스트 길이 계산
+                foreach (TenshiEntry i in m_entries)
+                {
+                    entry_len += (uint)i.EntryLength;
+                }
+                save_stream.Write(LittleEndian.ToEndian(entry_count), 0, 2);
+                save_stream.Write(LittleEndian.ToEndian(entry_len), 0, 4);
+                // 엔트리 리스트 구성
+                uint offset = 6 + entry_len;
+                MemoryStream entry_list_stream = new MemoryStream((int)entry_len);
+                TenshiRandomGenerator rand = new TenshiRandomGenerator(6 + entry_len);
+                foreach (TenshiEntry i in m_entries)
+                {
+                    entry_list_stream.Write(LittleEndian.ToEndian(offset), 0, 4);
+                    entry_list_stream.Write(LittleEndian.ToEndian((uint)i.Length), 0, 4);
+                    entry_list_stream.WriteByte((byte)ShiftJIS.GetByteCount(i.Entry));
+                    entry_list_stream.Write(ShiftJIS.GetBytes(i.Entry), 0, ShiftJIS.GetByteCount(i.Entry));
+                    i.NewOffset = offset;
+                    offset += (uint)i.Length;
+                }
+                // 리스트 암호화
+                {
+                    byte[] buf = entry_list_stream.GetBuffer();
+                    byte key = key_base, delta = key_delta;
+                    for (uint i = 0; i < m_list_length; i++)
+                    {
+                        buf[i] ^= key;
+                        key += delta;
+                        delta += key_ddelta;
+                        buf[i] ^= (byte)(rand.NextInt() & 0xff);
+                    }
+                    save_stream.Write(buf, 0, (int)entry_len);
+                    entry_list_stream.Dispose();
+                }
+                // 나 쓴다 데이터
+                ushort count = 0;
+                if (m_buf_queue == null) m_buf_queue = new Queue<byte[]>();
+                else m_buf_queue.Clear();
+                Thread th = new Thread(new ThreadStart(CryptThread));
+                th.Start();
+                for (ushort i = 0; i < entry_count; i++)
+                {
+                    while (m_buf_queue.Count <= 0) ;
+                    byte[] buf = m_buf_queue.Dequeue();
+                    save_stream.Write(buf, 0, buf.Length);
+                    if (callback != null) callback(++count, entry_count);
+                }
+                save_stream.Close();
+                // 다시 열기
+                m_stream.Close();
+                Open(Path);
+            }
+            catch
+            {
+            }
+            finally
+            {
+                save_stream.Close();
+            }
+        }
 
         public void Dispose()
         {
@@ -247,6 +376,18 @@ namespace cvn_helper
             {
                 m_stream.Close();
                 m_stream.Dispose();
+            }
+        }
+
+        private Queue<byte[]> m_buf_queue;
+        private void CryptThread()
+        {
+            foreach (TenshiEntry i in m_entries)
+            {
+                byte[] buf = new byte[i.Length];
+                i.Seek(0, SeekOrigin.Begin);
+                i.ReadEncrpyted(buf, 0, (int)i.Length);
+                m_buf_queue.Enqueue(buf);
             }
         }
     }

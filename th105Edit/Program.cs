@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Windows.Forms;
 
-namespace cvn_helper
+namespace th105Edit
 {
     static class Program
     {

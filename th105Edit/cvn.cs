@@ -6,7 +6,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 
-namespace cvn_helper
+namespace th105Edit
 {
     public enum cvnType
     {
@@ -509,13 +509,13 @@ namespace cvn_helper
             }
             byte[] buf = new byte[4];
             Array.Copy(header, 1, buf, 0, 4);
-            m_width_actual = endian(buf);
+            m_width_actual = LittleEndian.FromEndian(buf);
             Array.Copy(header, 5, buf, 0, 4);
-            m_height = endian(buf);
+            m_height = LittleEndian.FromEndian(buf);
             Array.Copy(header, 9, buf, 0, 4);
-            m_width_data = endian(buf);
+            m_width_data = LittleEndian.FromEndian(buf);
             Array.Copy(header, 13, buf, 0, 4);
-            m_unknown_field = endian(buf);
+            m_unknown_field = LittleEndian.FromEndian(buf);
 
             PixelFormat image_format;
             switch (m_format)
@@ -592,10 +592,10 @@ namespace cvn_helper
             FileStream fp = new FileStream(Path, FileMode.Create);
             byte[] header = new byte[0x11];
             header[0] = m_raw_format;
-            Array.Copy(deendian(m_width_actual), 0, header, 1, 4);
-            Array.Copy(deendian(m_height), 0, header, 5, 4);
-            Array.Copy(deendian(m_width_data), 0, header, 9, 4);
-            Array.Copy(deendian(m_unknown_field), 0, header, 13, 4);
+            Array.Copy(LittleEndian.ToEndian(m_width_actual), 0, header, 1, 4);
+            Array.Copy(LittleEndian.ToEndian(m_height), 0, header, 5, 4);
+            Array.Copy(LittleEndian.ToEndian(m_width_data), 0, header, 9, 4);
+            Array.Copy(LittleEndian.ToEndian(m_unknown_field), 0, header, 13, 4);
             fp.Write(header, 0, 0x11);
 
             BitmapData raw_data;
@@ -634,10 +634,10 @@ namespace cvn_helper
             MemoryStream fp = new MemoryStream();
             byte[] header = new byte[0x11];
             header[0] = m_raw_format;
-            Array.Copy(deendian(m_width_actual), 0, header, 1, 4);
-            Array.Copy(deendian(m_height), 0, header, 5, 4);
-            Array.Copy(deendian(m_width_data), 0, header, 9, 4);
-            Array.Copy(deendian(m_unknown_field), 0, header, 13, 4);
+            Array.Copy(LittleEndian.ToEndian(m_width_actual), 0, header, 1, 4);
+            Array.Copy(LittleEndian.ToEndian(m_height), 0, header, 5, 4);
+            Array.Copy(LittleEndian.ToEndian(m_width_data), 0, header, 9, 4);
+            Array.Copy(LittleEndian.ToEndian(m_unknown_field), 0, header, 13, 4);
             fp.Write(header, 0, 0x11);
 
             BitmapData raw_data;
@@ -685,20 +685,6 @@ namespace cvn_helper
         {
             return "cvn_helper.cv2";
         }
-
-        private static int endian(byte[] bytes)
-        {
-            return bytes[0] + (bytes[1] << 8) + (bytes[2] << 16) + (bytes[3] << 24);
-        }
-        private static byte[] deendian(int target)
-        {
-            byte[] result = new byte[4];
-            result[0] = (byte)(target >> 0  & 0xFF);
-            result[1] = (byte)(target >> 8  & 0xFF);
-            result[2] = (byte)(target >> 16 & 0xFF);
-            result[3] = (byte)(target >> 24 & 0xFF);
-            return result;
-        }
     }
     public class cv3 : cvnBase
     {
@@ -743,7 +729,7 @@ namespace cvn_helper
         }
     }
     
-    class cvn
+    public class cvn
     {
         public static cvnBase Open(string Path, cvnType FileType = cvnType.Unknown, string PalettePath = "")
         {

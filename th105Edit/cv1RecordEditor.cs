@@ -6,7 +6,7 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 
-namespace cvn_helper
+namespace th105Edit
 {
     public partial class cv1RecordEditor : Form
     {
@@ -21,6 +21,8 @@ namespace cvn_helper
             get { return m_field_index; }
             set
             {
+                m_record.Fields[m_field_index] = txtData.Text.Replace("\n", "").Replace("\r", "");
+
                 m_field_index = value;
                 if (m_record.Fields.Length <= m_field_index) m_field_index = m_record.Fields.Length - 1;
                 if (m_field_index < 0) m_field_index = 0;
@@ -37,7 +39,8 @@ namespace cvn_helper
         {
             InitializeComponent();
             m_record = Record;
-            FieldIndex = 0;
+            m_field_index = 0;
+            txtData.Text = m_record.Fields[m_field_index];
         }
 
         private void btnPrevious_Click(object sender, EventArgs e)
@@ -54,9 +57,6 @@ namespace cvn_helper
         {
             if (e.KeyChar == 13)
             {
-                m_record.Fields[FieldIndex] = txtData.Text;
-                if (FieldIndex == m_record.Fields.Length - 1) Close();
-                else FieldIndex++;
             }
         }
 
