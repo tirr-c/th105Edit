@@ -57,12 +57,14 @@ namespace th105Edit
             this.MenuFile = new System.Windows.Forms.ToolStripMenuItem();
             this.MenuOpen = new System.Windows.Forms.ToolStripMenuItem();
             this.MenuSave = new System.Windows.Forms.ToolStripMenuItem();
+            this.MenuSaveAs = new System.Windows.Forms.ToolStripMenuItem();
             this.MenuSeparate1 = new System.Windows.Forms.ToolStripSeparator();
             this.MenuReload = new System.Windows.Forms.ToolStripMenuItem();
             this.MenuSeparate3 = new System.Windows.Forms.ToolStripSeparator();
             this.MenuExit = new System.Windows.Forms.ToolStripMenuItem();
             this.FileTree = new System.Windows.Forms.TreeView();
-            this.MenuSaveAs = new System.Windows.Forms.ToolStripMenuItem();
+            this.MenuAdd = new System.Windows.Forms.ToolStripMenuItem();
+            this.MenuSeparate0 = new System.Windows.Forms.ToolStripSeparator();
             this.MyMenu.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -82,6 +84,8 @@ namespace th105Edit
             this.MenuOpen,
             this.MenuSave,
             this.MenuSaveAs,
+            this.MenuSeparate0,
+            this.MenuAdd,
             this.MenuSeparate1,
             this.MenuReload,
             this.MenuSeparate3,
@@ -106,6 +110,14 @@ namespace th105Edit
             this.MenuSave.Size = new System.Drawing.Size(187, 22);
             this.MenuSave.Text = "저장";
             this.MenuSave.Click += new System.EventHandler(this.MenuSave_Click);
+            // 
+            // MenuSaveAs
+            // 
+            this.MenuSaveAs.Enabled = false;
+            this.MenuSaveAs.Name = "MenuSaveAs";
+            this.MenuSaveAs.Size = new System.Drawing.Size(187, 22);
+            this.MenuSaveAs.Text = "다른 이름으로 저장...";
+            this.MenuSaveAs.Click += new System.EventHandler(this.MenuSaveAs_Click);
             // 
             // MenuSeparate1
             // 
@@ -143,13 +155,18 @@ namespace th105Edit
             this.FileTree.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.FileTree_NodeMouseClick);
             this.FileTree.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.FileTree_NodeMouseDoubleClick);
             // 
-            // MenuSaveAs
+            // MenuAdd
             // 
-            this.MenuSaveAs.Enabled = false;
-            this.MenuSaveAs.Name = "MenuSaveAs";
-            this.MenuSaveAs.Size = new System.Drawing.Size(187, 22);
-            this.MenuSaveAs.Text = "다른 이름으로 저장...";
-            this.MenuSaveAs.Click += new System.EventHandler(this.MenuSaveAs_Click);
+            this.MenuAdd.Enabled = false;
+            this.MenuAdd.Name = "MenuAdd";
+            this.MenuAdd.Size = new System.Drawing.Size(187, 22);
+            this.MenuAdd.Text = "추가...";
+            this.MenuAdd.Click += new System.EventHandler(this.MenuAdd_Click);
+            // 
+            // MenuSeparate0
+            // 
+            this.MenuSeparate0.Name = "MenuSeparate0";
+            this.MenuSeparate0.Size = new System.Drawing.Size(184, 6);
             // 
             // frmArchiveManager
             // 
@@ -180,5 +197,7 @@ namespace th105Edit
         private System.Windows.Forms.ToolStripMenuItem MenuExit;
         private System.Windows.Forms.TreeView FileTree;
         private System.Windows.Forms.ToolStripMenuItem MenuSaveAs;
+        private System.Windows.Forms.ToolStripSeparator MenuSeparate0;
+        private System.Windows.Forms.ToolStripMenuItem MenuAdd;
     }
 }

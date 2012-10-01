@@ -83,8 +83,11 @@ namespace th105Edit
             {
                 if (m_changedstream != null)
                 {
-                    m_changedstream.Close(); m_changedstream.Dispose();
-                } m_changedstream = value; m_position = 0;
+                    m_changedstream.Close();
+                    m_changedstream.Dispose();
+                }
+                m_changedstream = value;
+                m_position = 0;
             }
         }
         public long NewOffset
@@ -107,13 +110,13 @@ namespace th105Edit
             m_position = 0;
 
             m_type = cvnType.Unknown;
-            string extension = m_entry.Substring(m_entry.IndexOf('.') + 1);
+            string extension = Path.GetExtension(m_entry);
             switch (extension)
             {
-                case "cv0": m_type = cvnType.Text; break;
-                case "cv1": m_type = cvnType.CSV; break;
-                case "cv2": m_type = cvnType.Graphic; break;
-                case "cv3": m_type = cvnType.Audio; break;
+                case ".cv0": m_type = cvnType.Text; break;
+                case ".cv1": m_type = cvnType.CSV; break;
+                case ".cv2": m_type = cvnType.Graphic; break;
+                case ".cv3": m_type = cvnType.Audio; break;
             }
         }
 
@@ -174,7 +177,7 @@ namespace th105Edit
             else
             {
                 m_changedstream.Seek(m_position, SeekOrigin.Begin);
-                actual_read = (int)(m_length - m_position);
+                actual_read = (int)(Length - m_position);
                 if (actual_read > count) actual_read = count;
 
                 actual_read = m_changedstream.Read(buffer, offset, actual_read);
@@ -198,7 +201,7 @@ namespace th105Edit
             else
             {
                 m_changedstream.Seek(m_position, SeekOrigin.Begin);
-                actual_read = (int)(m_length - m_position);
+                actual_read = (int)(Length - m_position);
                 if (actual_read > count) actual_read = count;
 
                 actual_read = m_changedstream.Read(buffer, offset, actual_read);
@@ -224,11 +227,11 @@ namespace th105Edit
                     m_position += offset;
                     break;
                 case SeekOrigin.End:
-                    m_position = m_length + offset;
+                    m_position = Length + offset;
                     break;
             }
             if (m_position < 0) m_position = 0;
-            if (m_position > m_length) m_position = m_length;
+            if (m_position > Length) m_position = Length;
             return m_position;
         }
 
@@ -357,7 +360,7 @@ namespace th105Edit
                 {
                     byte[] buf = entry_list_stream.GetBuffer();
                     byte key = key_base, delta = key_delta;
-                    for (uint i = 0; i < m_list_length; i++)
+                    for (uint i = 0; i < entry_len; i++)
                     {
                         buf[i] ^= key;
                         key += delta;
@@ -380,6 +383,7 @@ namespace th105Edit
                     save_stream.Write(buf, 0, buf.Length);
                     if (callback != null) callback(++count, entry_count);
                 }
+                m_stream.Close();
             }
             catch
             {

@@ -116,6 +116,8 @@ namespace th105Edit
                     cv2Image.Image = m_workingfile.Data as Bitmap;
                     int w = Width - cv2Image.Width + cv2Image.Image.Width;
                     int h = Height - cv2Image.Height + cv2Image.Image.Height;
+                    if (w < 150) w = 150;
+                    if (h < 150) h = 150;
                     Width = w;
                     Height = h;
                     break;
@@ -183,6 +185,8 @@ namespace th105Edit
         {
             cv1RecordEditor editor =
                 new cv1RecordEditor((m_workingfile.Data as cv1DataCollection)[(sender as ListView).SelectedIndices[0]]);
+            editor.Left = this.Left + 50;
+            editor.Top = this.Top + 50;
             editor.ShowDialog();
             cv1UpdateList();
         }
@@ -240,20 +244,25 @@ namespace th105Edit
         private void MenuExtract_Click(object sender, EventArgs e)
         {
             SaveFileDialog dlgSave = new SaveFileDialog();
+            string def_file = m_workingpath;
             switch (m_workingfile.Type)
             {
                 case cvnType.Text:
                     dlgSave.Filter = "텍스트 파일(*.txt)|*.txt";
+                    Path.ChangeExtension(def_file, ".txt");
                     break;
                 case cvnType.CSV:
                     dlgSave.Filter = "CSV 시트(*.csv)|*.csv";
+                    Path.ChangeExtension(def_file, ".csv");
                     break;
                 case cvnType.Graphic:
                     dlgSave.Filter = "PNG(*.png)|*.png";
+                    Path.ChangeExtension(def_file, ".png");
                     break;
             }
             dlgSave.Filter += "|모든 파일(*.*)|*.*";
             dlgSave.FilterIndex = 1;
+            dlgSave.FileName = Path.GetFileName(def_file);
             dlgSave.OverwritePrompt = true;
             if (dlgSave.ShowDialog() == DialogResult.OK)
             {

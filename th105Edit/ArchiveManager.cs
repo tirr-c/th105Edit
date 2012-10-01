@@ -41,6 +41,7 @@ namespace th105Edit
             new MenuItem("수정..."),
             new MenuItem("추출..."),
             new MenuItem("교체..."),
+            new MenuItem("삭제"),
         };
 
         public frmArchiveManager()
@@ -51,6 +52,7 @@ namespace th105Edit
             ContextMenuItems[0].Click += new EventHandler(ContextMenu_EditClick);
             ContextMenuItems[1].Click += new EventHandler(ContextMenu_ExtractClick);
             ContextMenuItems[2].Click += new EventHandler(ContextMenu_ReplaceClick);
+            ContextMenuItems[3].Click += new EventHandler(ContextMenu_DeleteClick);
         }
 
         private delegate void OpenFileCallback(string Path);
@@ -160,13 +162,21 @@ namespace th105Edit
             m.Show(sender as Control, e.Location);
         }
 
+        void ContextMenu_DeleteClick(object sender, EventArgs e)
+        {
+            TenshiEntry entry = ((sender as MenuItem).Tag as TreeNode).Tag as TenshiEntry;
+            m_workingfile.Entries.Remove(entry);
+            ((sender as MenuItem).Tag as TreeNode).Remove();
+        }
+
         void ContextMenu_ExtractClick(object sender, EventArgs e)
         {
             SaveFileDialog sfd = new SaveFileDialog();
             TenshiEntry entry = ((sender as MenuItem).Tag as TreeNode).Tag as TenshiEntry;
             string entry_str = entry.Entry;
-            string ext = entry_str.Substring(entry_str.IndexOf('.') + 1);
-            sfd.Filter = ext + "(*." + ext + ")|*." + ext + "|모든 파일(*.*)|*.*";
+            string ext = Path.GetExtension(entry_str);
+            sfd.Filter = ext + "(*" + ext + ")|*" + ext + "|모든 파일(*.*)|*.*";
+            sfd.FileName = Path.GetFileName(entry_str);
             sfd.OverwritePrompt = true;
             if (sfd.ShowDialog() == DialogResult.OK)
             {
@@ -214,7 +224,7 @@ namespace th105Edit
             {
                 File.Delete(m_workingpath);
                 File.Move(temp_name, m_workingpath);
-                m_workingfile.Open(m_workingpath);
+                Reload();
             }
         }
 
@@ -239,7 +249,8 @@ namespace th105Edit
                 }
                 else
                 {
-                    m_workingfile.Open(sfd.FileName);
+                    m_workingpath = sfd.FileName;
+                    Reload();
                 }
             }
         }
@@ -271,6 +282,7 @@ namespace th105Edit
             MenuOpen.Enabled = false;
             MenuSave.Enabled = false;
             MenuSaveAs.Enabled = false;
+            MenuAdd.Enabled = false;
             MenuReload.Enabled = false;
             FileTree.Enabled = false;
         }
@@ -279,6 +291,7 @@ namespace th105Edit
             MenuOpen.Enabled = true;
             MenuSave.Enabled = true;
             MenuSaveAs.Enabled = true;
+            MenuAdd.Enabled = true;
             MenuReload.Enabled = true;
             FileTree.Enabled = true;
             if (isSave) m_save_progress.Close();
@@ -286,9 +299,39 @@ namespace th105Edit
 
         private void MenuReload_Click(object sender, EventArgs e)
         {
+            Reload();
+        }
+        private void Reload()
+        {
             StartOpenSave();
             Thread th = new Thread(new ParameterizedThreadStart(OpenWork));
             th.Start(m_workingpath);
+        }
+
+        private void MenuAdd_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog ofd = new OpenFileDialog();
+            ofd.Filter = "cvn 파일(*.cv*)|*.cv*|모든 파일(*.*)|*.*";
+            ofd.FilterIndex = 1;
+            ofd.CheckFileExists = ofd.CheckPathExists = true;
+            ofd.Multiselect = true;
+
+            if (ofd.ShowDialog() == DialogResult.OK)
+            {
+                foreach (string file_name in ofd.FileNames)
+                {
+                    frmEntryName dlgName = new frmEntryName();
+                    dlgName.Top = this.Top + 50;
+                    dlgName.Left = this.Left + 50;
+                    dlgName.Entry = file_name;
+                    dlgName.ShowDialog();
+                    if (dlgName.Entry == string.Empty) return;
+                    TenshiEntry i = new TenshiEntry(null, dlgName.Entry, 0, 0);
+                    i.ChangedStream = File.OpenRead(file_name);
+                    m_workingfile.Entries.Add(i);
+                    AddNode(i);
+                }
+            }
         }
     }
 }
