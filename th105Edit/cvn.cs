@@ -25,10 +25,11 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 using System;
 using System.Collections.ObjectModel;
-using System.Text;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Media;
+using System.Text;
 
 namespace th105Edit
 {
@@ -89,6 +90,121 @@ namespace th105Edit
         }
     }
 
+    public class cv3Stream : Stream
+    {
+        private long m_virtual_position, m_real_position;
+        private Stream m_internal;
+        private byte[] m_header;
+
+        public cv3Stream()
+            : base()
+        {
+            m_virtual_position = m_real_position = 0;
+            m_internal = null;
+            m_header = new byte[0x2c];
+        }
+        public cv3Stream(Stream fp)
+            : this()
+        {
+            m_internal = fp;
+            Array.Copy(Encoding.ASCII.GetBytes("RIFF"), 0, m_header, 0x00, 4);
+            Array.Copy(LittleEndian.ToEndian((int)Length), 0, m_header, 0x04, 4);
+            Array.Copy(Encoding.ASCII.GetBytes("WAVEfmt "), 0, m_header, 0x08, 8);
+            Array.Copy(new byte[4] { 0x10, 0, 0, 0 }, 0, m_header, 0x10, 4);
+            byte[] buffer = new byte[0x10];
+            m_internal.Seek(0, SeekOrigin.Begin);
+            m_internal.Read(buffer, 0, 0x10);
+            Array.Copy(buffer, 0, m_header, 0x14, 0x10);
+            Array.Copy(Encoding.ASCII.GetBytes("data"), 0, m_header, 0x24, 4);
+            Array.Copy(LittleEndian.ToEndian((int)Length - 0x2c), 0, m_header, 0x28, 4);
+        }
+
+        public override bool CanRead
+        {
+            get { return true; }
+        }
+        public override bool CanSeek
+        {
+            get { return true; }
+        }
+        public override bool CanWrite
+        {
+            get { return false; }
+        }
+
+        public override void Flush()
+        {
+            return;
+        }
+
+        public override long Length
+        {
+            get { return m_internal.Length + 0x1c; }
+        }
+
+        public override long Position
+        {
+            get
+            {
+                return m_virtual_position;
+            }
+            set
+            {
+                Seek(value, SeekOrigin.Begin);
+            }
+        }
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            byte[] real_buffer = new byte[count];
+            int virtual_left = 0x2c - (int)m_virtual_position;
+            if (virtual_left < 0) virtual_left = 0;
+            if (virtual_left > count) virtual_left = count;
+            if (virtual_left > 0) Array.Copy(m_header, m_virtual_position, real_buffer, 0, virtual_left);
+            Seek(virtual_left, SeekOrigin.Current);
+            count -= virtual_left;
+            if (count <= 0) return virtual_left;
+
+            int read = m_internal.Read(real_buffer, virtual_left, count);
+            Array.Copy(real_buffer, 0, buffer, offset, count + virtual_left);
+
+            return virtual_left + read;
+        }
+
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            switch (origin)
+            {
+                case SeekOrigin.Begin: m_virtual_position = offset; break;
+                case SeekOrigin.Current: m_virtual_position += offset; break;
+                case SeekOrigin.End: m_virtual_position = Length + offset; break;
+            }
+            if (m_virtual_position < 0) m_virtual_position = 0;
+            if (m_virtual_position > Length) m_virtual_position = Length;
+
+            if (m_virtual_position < 0x14)
+                m_real_position = 0;
+            else if (m_virtual_position < 0x24)
+                m_real_position = m_virtual_position - 0x14;
+            else if (m_virtual_position < 0x2c)
+                m_real_position = 0x10;
+            else
+                m_real_position = m_virtual_position - 0x1c;
+            m_internal.Seek(m_real_position, SeekOrigin.Begin);
+            return m_virtual_position;
+        }
+
+        public override void SetLength(long value)
+        {
+            return;
+        }
+
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            return;
+        }
+    }
+
     public abstract class cvnBase : IDisposable
     {
         protected cvnType m_type;
@@ -113,7 +229,11 @@ namespace th105Edit
         {
         }
 
-        public abstract void Open(string Path);
+        public virtual void Open(string Path)
+        {
+            FileStream fstr = new FileStream(Path, FileMode.Open);
+            Open(fstr);
+        }
         public abstract void Open(Stream fp);
         public abstract void SaveToFile(string Path);
         public abstract Stream ToStream();
@@ -712,9 +832,29 @@ namespace th105Edit
     }
     public class cv3 : cvnBase
     {
+        public cv3()
+            : base()
+        {
+            m_sp = null;
+            m_stream = null;
+        }
+        public cv3(string Path)
+            : this()
+        {
+            Open(Path);
+        }
+        public cv3(Stream fp)
+            : this()
+        {
+            Open(fp);
+        }
+
+        SoundPlayer m_sp;
+        cv3Stream m_stream;
+
         public override object Data
         {
-            get { throw new NotImplementedException(); }
+            get { return m_sp; }
         }
 
         public override void SetData(object Data)
@@ -722,19 +862,20 @@ namespace th105Edit
             throw new NotImplementedException();
         }
 
-        public override void Open(string Path)
-        {
-            throw new NotImplementedException();
-        }
-
         public override void Open(Stream fp)
         {
-            throw new NotImplementedException();
+            m_stream = new cv3Stream(fp);
+            m_sp = new SoundPlayer(m_stream);
         }
 
         public override void SaveToFile(string Path)
         {
-            throw new NotImplementedException();
+            FileStream file = new FileStream(Path, FileMode.Create);
+            m_stream.Seek(0, SeekOrigin.Begin);
+            int len = (int)m_stream.Length;
+            byte[] buffer = new byte[len];
+            m_stream.Read(buffer, 0, len);
+            file.Write(buffer, 0, len);
         }
 
         public override Stream ToStream()
@@ -749,10 +890,11 @@ namespace th105Edit
 
         public override void Dispose()
         {
-            throw new NotImplementedException();
+            if (m_stream != null) m_stream.Dispose();
+            if (m_sp != null) m_sp.Dispose();
         }
     }
-    
+
     public class cvn
     {
         public static cvnBase Open(string Path, cvnType FileType = cvnType.Unknown, string PalettePath = "")
@@ -785,6 +927,7 @@ namespace th105Edit
                         result = null;
                     }
                     return result;
+                case cvnType.Audio: return new cv3(Path);
                 default: return null;
             }
         }
@@ -805,6 +948,7 @@ namespace th105Edit
                         result = null;
                     }
                     return result;
+                case cvnType.Audio: return new cv3(fp);
                 default: return null;
             }
         }
