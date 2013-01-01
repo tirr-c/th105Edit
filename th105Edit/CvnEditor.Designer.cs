@@ -17,6 +17,7 @@
             {
                 components.Dispose();
             }
+            m_workingfile.Dispose();
             base.Dispose(disposing);
         }
 
@@ -43,6 +44,7 @@
             this.cv0Data = new System.Windows.Forms.TextBox();
             this.cv1List = new System.Windows.Forms.ListView();
             this.cv2Image = new System.Windows.Forms.PictureBox();
+            this.cv3Play = new System.Windows.Forms.Button();
             this.myMenu.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.cv2Image)).BeginInit();
             this.SuspendLayout();
@@ -186,12 +188,24 @@
             this.cv2Image.TabStop = false;
             this.cv2Image.Visible = false;
             // 
+            // cv3Play
+            // 
+            this.cv3Play.Location = new System.Drawing.Point(199, 28);
+            this.cv3Play.Name = "cv3Play";
+            this.cv3Play.Size = new System.Drawing.Size(76, 23);
+            this.cv3Play.TabIndex = 4;
+            this.cv3Play.Text = "재생 ▶";
+            this.cv3Play.UseVisualStyleBackColor = true;
+            this.cv3Play.Visible = false;
+            this.cv3Play.Click += new System.EventHandler(this.cv3Play_Click);
+            // 
             // frmCvnEditor
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ControlLightLight;
             this.ClientSize = new System.Drawing.Size(393, 284);
+            this.Controls.Add(this.cv3Play);
             this.Controls.Add(this.cv2Image);
             this.Controls.Add(this.cv1List);
             this.Controls.Add(this.cv0Data);
@@ -225,6 +239,7 @@
         private System.Windows.Forms.ToolStripMenuItem MenuChangeEncoding;
         private System.Windows.Forms.ToolStripMenuItem MenuSaveAsKorean;
         private System.Windows.Forms.ToolStripMenuItem MenuSaveAsJapanese;
+        private System.Windows.Forms.Button cv3Play;
     }
 }
 

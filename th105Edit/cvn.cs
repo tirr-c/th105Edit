@@ -1,5 +1,5 @@
 ﻿/*
-Copyright VBChunguk  2012
+Copyright VBChunguk  2012-2013
 
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation
@@ -835,6 +835,7 @@ namespace th105Edit
         public cv3()
             : base()
         {
+            m_type = cvnType.Audio;
             m_sp = null;
             m_stream = null;
         }
@@ -866,30 +867,43 @@ namespace th105Edit
         {
             m_stream = new cv3Stream(fp);
             m_sp = new SoundPlayer(m_stream);
+            m_sp.Load();
         }
 
         public override void SaveToFile(string Path)
         {
-            FileStream file = new FileStream(Path, FileMode.Create);
-            m_stream.Seek(0, SeekOrigin.Begin);
             int len = (int)m_stream.Length;
-            byte[] buffer = new byte[len];
-            m_stream.Read(buffer, 0, len);
-            file.Write(buffer, 0, len);
+            byte[] buf = new byte[len - 0x1c];
+            m_stream.Seek(0x14, SeekOrigin.Begin);
+            m_stream.Read(buf, 0, 0x10);
+            m_stream.Seek(0x2c, SeekOrigin.Begin);
+            m_stream.Read(buf, 0x10, len - 0x2c);
+            File.WriteAllBytes(Path, buf);
         }
 
         public override Stream ToStream()
         {
-            throw new NotImplementedException();
+            int len = (int)m_stream.Length;
+            byte[] buf = new byte[len - 0x1c];
+            m_stream.Seek(0x14, SeekOrigin.Begin);
+            m_stream.Read(buf, 0, 0x10);
+            m_stream.Seek(0x2c, SeekOrigin.Begin);
+            m_stream.Read(buf, 0x10, len - 0x2c);
+            return new MemoryStream(buf);
         }
 
         public override void Extract(string Path)
         {
-            throw new NotImplementedException();
+            m_stream.Seek(0, SeekOrigin.Begin);
+            int len = (int)m_stream.Length;
+            byte[] buffer = new byte[len];
+            m_stream.Read(buffer, 0, len);
+            File.WriteAllBytes(Path, buffer);
         }
 
         public override void Dispose()
         {
+            m_sp.Stop();
             if (m_stream != null) m_stream.Dispose();
             if (m_sp != null) m_sp.Dispose();
         }

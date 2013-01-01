@@ -1,5 +1,5 @@
 ﻿/*
-Copyright VBChunguk  2012
+Copyright VBChunguk  2012-2013
 
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation
@@ -25,9 +25,10 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 using System;
 using System.Drawing;
+using System.IO;
+using System.Media;
 using System.Text;
 using System.Windows.Forms;
-using System.IO;
 
 namespace th105Edit
 {
@@ -121,6 +122,8 @@ namespace th105Edit
                     Width = w;
                     Height = h;
                     break;
+                case cvnType.Audio:
+                    break;
             }
         }
 
@@ -128,8 +131,9 @@ namespace th105Edit
         {
             MenuExtract.Enabled = true;
             MenuImport.Enabled = true;
-            Control[] controls = new Control[] { cv0Data, cv1List, cv2Image };
-            int pass_index = 3;
+            Control[] controls = new Control[] { cv0Data, cv1List, cv2Image, cv3Play };
+            string[] names = new string[] { "텍스트", "CSV 리스트", "비트맵", "오디오" };
+            int pass_index = 4;
             switch (type)
             {
                 case cvnType.Text:
@@ -143,7 +147,11 @@ namespace th105Edit
                 case cvnType.Graphic:
                     pass_index = 2;
                     break;
+                case cvnType.Audio:
+                    pass_index = 3;
+                    break;
             }
+            this.Text = "(" + names[pass_index] + ") " + Path.GetFileName(m_workingpath) + " - cvn 에디터";
             for (int i = 0; i < controls.Length; i++)
             {
                 if (pass_index == i) break;
@@ -213,6 +221,7 @@ namespace th105Edit
                     break;
                 case cvnType.CSV:
                 case cvnType.Graphic:
+                case cvnType.Audio:
                     break;
             }
             if (!m_is_from_stream) m_workingfile.SaveToFile(m_workingpath);
@@ -249,15 +258,19 @@ namespace th105Edit
             {
                 case cvnType.Text:
                     dlgSave.Filter = "텍스트 파일(*.txt)|*.txt";
-                    Path.ChangeExtension(def_file, ".txt");
+                    def_file = Path.ChangeExtension(def_file, ".txt");
                     break;
                 case cvnType.CSV:
                     dlgSave.Filter = "CSV 시트(*.csv)|*.csv";
-                    Path.ChangeExtension(def_file, ".csv");
+                    def_file = Path.ChangeExtension(def_file, ".csv");
                     break;
                 case cvnType.Graphic:
                     dlgSave.Filter = "PNG(*.png)|*.png";
-                    Path.ChangeExtension(def_file, ".png");
+                    def_file = Path.ChangeExtension(def_file, ".png");
+                    break;
+                case cvnType.Audio:
+                    dlgSave.Filter = "웨이브(*.wav)|*.wav";
+                    def_file = Path.ChangeExtension(def_file, ".wav");
                     break;
             }
             dlgSave.Filter += "|모든 파일(*.*)|*.*";
@@ -339,6 +352,11 @@ namespace th105Edit
             }
             RefreshView();
             m_changed = true;
+        }
+
+        private void cv3Play_Click(object sender, EventArgs e)
+        {
+            (m_workingfile.Data as SoundPlayer).Play();
         }
     }
 }

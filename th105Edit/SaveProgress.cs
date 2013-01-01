@@ -1,5 +1,5 @@
 ﻿/*
-Copyright VBChunguk  2012
+Copyright VBChunguk  2012-2013
 
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation

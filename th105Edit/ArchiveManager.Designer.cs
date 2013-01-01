@@ -42,6 +42,7 @@ namespace th105Edit
             {
                 components.Dispose();
             }
+            m_workingfile.Dispose();
             base.Dispose(disposing);
         }
 
